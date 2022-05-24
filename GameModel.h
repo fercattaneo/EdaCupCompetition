@@ -13,13 +13,8 @@
 #include <cmath>
 #include <cstring>
 #include "MQTTClient2.h"
+#include "Players.h"
 #include "data.h"
-
-#include "Team/Players.h"
-#include "Team/Goalie.h"
-#include "Team/Defense.h"
-#include "Team/Midfielder.h"
-#include "Team/Shooter.h"
 
 using namespace std;
 
@@ -46,13 +41,6 @@ enum GameState
     GOAL
 };
 
-enum BallPosession
-{
-    MY_TEAM,
-    OPP_TEAM,
-    FREE_BALL
-};
-
 class GameModel : public MQTTListener
 {
 public:
@@ -72,7 +60,6 @@ private:
     vector<MQTTMessage> messagesToSend;
 
     GameState gameState;
-    BallPosession attackingTeam;
     string teamID;
     string oppTeamID;
 
@@ -84,14 +71,11 @@ private:
 
     void update();
     void updatePositions();
-    void verifyPossesion();
     void assignMessagePayload(string topic, vector<char> &payload);
-    void robotMessagesToSend(Robot* robot);
 
     void setSetpoint(setPoint_t setpoint, string robotID);
 
     void shootToGoal(Players *player);
-
     void voltageKickerChipper(string robotID);
     void setDribbler(string robotID);
     void setChipper(string robotID);

@@ -17,15 +17,33 @@ Players::~Players()
 {
 }
 
-/**
- * @brief assigns an identification number to the robot for simplifying the messagge recognition
- *
+/*
+ * @brief: assigns an identification number to the robot for simplifying the messagge recognition
  * @param playerNumber: string containing the indentification
  */
 void Players::start(string playerNumber)
 {
 	// depende de la entrega
 	robotID = playerNumber.c_str();
+}
+
+/**
+ * @brief calculates a court setpoint for the player
+ *
+ * @param oppositeGoal: opposites team goal ~ where to shoot
+ * @param ballPosition: actual ball�s position ~ point of reference
+ * @param proportional: proportional value for position calculation
+ *
+ * @return destination: position in court and players rotation for shooting
+ */
+setPoint_t Players::goToBall(Vector2 oppositeGoal, Vector2 ballPosition, float proportional)
+{
+	setPoint_t destination;
+
+	destination.coord = proportionalPosition(oppositeGoal, ballPosition, proportional);
+	destination.rotation = calculateRotation(oppositeGoal, ballPosition);
+
+	return destination;
 }
 
 /**
@@ -48,11 +66,11 @@ setPoint_t Players::kickBallLogic(Vector2 oppositeGoal, Vector2 ballPosition)
 		if (isCloseTo({position.x, position.z}, ballPosition, 0.1f))
 			return {100, 100, 100}; // reference value designed for shooting command
 		else
-			return getSetPoint(oppositeGoal, ballPosition, 1.0f);
+			return goToBall(oppositeGoal, ballPosition, 1.0f);
 	}
 	else
 	{
-		setPoint_t result = getSetPoint(oppositeGoal, ballPosition, 1.05f);
+		setPoint_t result = goToBall(oppositeGoal, ballPosition, 1.05f);
 		if (sameLine({position.x, position.z}, result.coord, ballPosition))
 		{
 			result.coord.x += 0.3;
@@ -69,16 +87,16 @@ setPoint_t Players::kickBallLogic(Vector2 oppositeGoal, Vector2 ballPosition)
 	}
 }
 
-/**
- * @brief: enables robot for playing
+/*
+ * brief: enables robot for playing
  */
 void Players::toEnablePlayer(void)
 {
 	enablePlayer = true;
 }
 
-/**
- * @brief: dissables robot for playing
+/*
+ * brief: dissables robot for playing
  */
 void Players::dissablePlayer(void)
 {

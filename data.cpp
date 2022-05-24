@@ -108,11 +108,11 @@ float calculateRotation(Vector2 originPos, Vector2 finalPos)
 	return angle;
 }
 
-/**
+/*
  * @brief Recives 2 coordinates and if the origin coord is close to destination returns true
  *
- * @param originPos - origin position of object
- * @param finalPos - final position of reference
+ * @param: originPos - origin position of object
+ * @param: finalPos - final position of reference
  * @param nearRange is the area to consider close
  *
  * @return true if its considered near, if not, false
@@ -153,23 +153,4 @@ bool sameLine(Vector2 originPos, Vector2 finalPos, Vector2 mediumPos)
 		return true;
 	}
 	return false;
-}
-
-/**
- * @brief calculates a court setpoint for the player
- *
- * @param destPos: destination of reference
- * @param firstPos: point of reference
- * @param proportional: proportional value for position calculation
- *
- * @return destination: position in court and players rotation
- */
-setPoint_t getSetPoint(Vector2 destPos, Vector2 firstPos, float proportional)
-{
-	setPoint_t destination;
-
-	destination.coord = proportionalPosition(destPos, firstPos, proportional);
-	destination.rotation = calculateRotation(destPos, firstPos);
-
-	return destination;
 }

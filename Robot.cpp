@@ -34,27 +34,6 @@ void Robot::setPowerLevels(Vector3 powerValues)
     powerLevel = powerValues;
 }
 
-void Robot::setDribbler(float volts)
-{
-    dribbler = volts;
-}
-
-void Robot::setKicker(float value)
-{
-    kicker = value;
-}
-
-void Robot::setChipper(float value)
-{
-    chipper = value;
-}
-
-void Robot::updateSetPoint()
-{
-    setpointInCourt.coord = {position.x,position.z};
-    setpointInCourt.rotation = rotation.y;
-}
-
 /* GETTERS */
 Vector3 Robot::getPosition()
 {
@@ -79,22 +58,4 @@ Vector3 Robot::getAngularSpeed()
 float Robot::getKickerCharge()
 {
     return powerLevel.z;
-}
-
-float Robot::getDribbler()
-{
-    return dribbler;
-}
-float Robot::getKicker()
-{
-    return kicker;
-}
-float Robot::getChipper()
-{
-    return chipper;
-}
-
-setPoint_t Robot::getRobotSetPoint()
-{
-    return setpointInCourt;
 }

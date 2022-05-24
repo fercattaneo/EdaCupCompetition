@@ -23,6 +23,5 @@ Vector2 proportionalPosition(Vector2 originPos, Vector2 finalPos, float proporti
 float calculateRotation(Vector2 originPos, Vector2 finalPos);
 bool isCloseTo(Vector2 originCoord, Vector2 destinationCoord, float nearRange);
 bool sameLine(Vector2 originPos, Vector2 finalPos, Vector2 mediumPos);
-setPoint_t getSetPoint(Vector2 destPos, Vector2 firstPos, float proportional);
 
 #endif //  DATA_H
