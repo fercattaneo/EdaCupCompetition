@@ -20,8 +20,8 @@ GameModel::GameModel(MQTTClient2 &mqttClient, string myTeam)
 	this->mqttClient = &mqttClient;
 	this->teamID = myTeam;
 	this->oppTeamID = (myTeam == "1") ? "2" : "1";
-	Vector2 arco1 = {4.5f, 0.0f};
-	Vector2 arco2 = {-4.5f, 0.0f};
+	Vector2 arco1 = {-4.5f, 0.0f};
+	Vector2 arco2 = {4.5f, 0.0f};
 	arcoTeam = (myTeam == "1") ? arco1 : arco2;
 	arcoOpposite = (myTeam == "1") ? arco2 : arco1;
 	for (int i = 0; i < 12; i++)
@@ -52,6 +52,18 @@ GameModel::GameModel(MQTTClient2 &mqttClient, string myTeam)
 	oppTeam.push_back(&enemy5);
 	Robot enemy6;
 	oppTeam.push_back(&enemy6);
+
+	vector<Vector3> positions;
+	for(auto bot : team)
+	{
+		positions.push_back(bot->getPosition()); //pusheo 6 posiciones al vector
+	}
+	dataPassing.ballPosition = {(Vector3*) &this->ball[0]};
+	dataPassing.ballVelocity = {(Vector3*) &this->ball[3]};
+	dataPassing.teamPositions = &positions;
+	dataPassing.oppTeamRobots = &this->oppTeam;
+	dataPassing.myGoal = &arcoTeam;
+	dataPassing.oppGoal = &arcoOpposite;
 }
 
 GameModel::~GameModel()
@@ -74,13 +86,15 @@ void GameModel::start()
 }
 
 /**
- * @brief initializes players of the team
+ * @brief updates status of robots
  *
  */
-void GameModel::update()
+void GameModel::update(inGameData_t * dataPassing)
 {
-	if (!isCloseTo({ball[0], ball[2]}, arcoOpposite, 1.5f))
-		shootToGoal(team[4]);
+	for (auto player : team)
+	{
+		player->update(dataPassing);
+	}
 }
 
 /**
@@ -96,7 +110,7 @@ void GameModel::onMessage(string topic, vector<char> payload)
 	{
 		memcpy(ball, &payload[0], payload.size());
 
-		update();
+		update(&dataPassing);
 
 		while (!messagesToSend.empty()) // sends all messages appended to message vector
 		{
@@ -352,22 +366,12 @@ void GameModel::setChipper(string robotID)
  */
 void GameModel::shootToGoal(Players *player)
 {
-	setPoint_t placeInCourt = player->kickBallLogic(arcoOpposite, {ball[0], ball[2]});
-	// Vector3 playerPositionXYZ = player->getPosition();
-	// Vector2 playerCourtPosition = {playerPositionXYZ.x , playerPositionXYZ.z};
-	// float distance = sqrt(((playerCourtPosition.x - placeInCourt.coord.x)*
-	// 	(playerCourtPosition.x - placeInCourt.coord.x)) +
-	// 	((playerCourtPosition.y - placeInCourt.coord.y)*
-	// 	(playerCourtPosition.y - placeInCourt.coord.y)));
-	// if(distance > 1)
-	// {
-	// 	placeInCourt = player->goToBall(playerCourtPosition, placeInCourt.coord, 0.3);
-	// }
+	setPoint_t proxPlaceInCourt = player->kickBallLogic(arcoOpposite, {ball[0], ball[2]});
 	setPoint_t kickValue = {100, 100, 100};
 
-	if ((placeInCourt.coord.x == kickValue.coord.x) &&
-		(placeInCourt.coord.y == kickValue.coord.y) &&
-		(placeInCourt.rotation == kickValue.rotation)) // comparacion de igualdad de setpoints
+	if ((proxPlaceInCourt.coord.x == kickValue.coord.x) &&
+		(proxPlaceInCourt.coord.y == kickValue.coord.y) &&
+		(proxPlaceInCourt.rotation == kickValue.rotation)) // comparacion de igualdad de setpoints
 	{
 		if (player->getKickerCharge() >= 160)
 			setKicker(player->robotID);
@@ -375,7 +379,11 @@ void GameModel::shootToGoal(Players *player)
 			voltageKickerChipper(player->robotID); // este orden por el pop_back del vector
 	}
 	else // mover hasta el setpoint indicado
-		setSetpoint(placeInCourt, player->robotID);
+	{
+		Vector3 posInCourt = player->getPosition();
+		proxPlaceInCourt.coord = proportionalPosition({posInCourt.x, posInCourt.z}, proxPlaceInCourt.coord, 0.33);
+		setSetpoint(proxPlaceInCourt, player->robotID);
+	}
 }
 
 /**

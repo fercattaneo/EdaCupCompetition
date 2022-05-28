@@ -8,6 +8,10 @@
  *******************************************************************/
 #include "Robot.h"
 
+Robot::~Robot()
+{
+}
+
 /* SETTERS */
 void Robot::setPosition(Vector3 pos)
 {

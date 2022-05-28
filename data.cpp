@@ -69,7 +69,7 @@ Vector2 proportionalPosition(Vector2 originPos, Vector2 finalPos, float proporti
 	return destination;
 }
 
-/*
+/**
  * @brief: calculates the rotation between 2 coordinates
  *
  * @param: originPos - origin position of object
@@ -108,7 +108,7 @@ float calculateRotation(Vector2 originPos, Vector2 finalPos)
 	return angle;
 }
 
-/*
+/**
  * @brief Recives 2 coordinates and if the origin coord is close to destination returns true
  *
  * @param: originPos - origin position of object
@@ -128,6 +128,15 @@ bool isCloseTo(Vector2 originCoord, Vector2 destinationCoord, float nearRange)
 		return false;
 }
 
+/**
+ * @brief Checks if a point belongs to the line between two points
+ * 
+ * @param originPos 
+ * @param finalPos 
+ * @param mediumPos 
+ * @return true 
+ * @return false 
+ */
 bool sameLine(Vector2 originPos, Vector2 finalPos, Vector2 mediumPos)
 {
 	float deltaX = finalPos.x - originPos.x;
@@ -152,5 +161,37 @@ bool sameLine(Vector2 originPos, Vector2 finalPos, Vector2 mediumPos)
 	{
 		return true;
 	}
+	return false;
+}
+
+/**
+ * @brief 
+ * 
+ * @param originPos 
+ * @param finalPos 
+ * @param point 
+ * @return true 
+ * @return false 
+ */
+bool betweenTwoLines(Vector2 originPos, Vector2 finalPos, Vector2 point)
+{
+	float deltaX = finalPos.x - originPos.x;
+	float deltaY = finalPos.y - originPos.y;
+	float pendiente = deltaY / deltaX;
+
+	float origin = originPos.y - pendiente * originPos.x;
+	float Xpoint = (point.y - origin) / pendiente; 
+
+
+	float displacement;
+	float pointLine1;
+	float pointLine2;  // tomo x de point y +- anchoDelPasillo / 2
+
+	// Calcular los puntos en la recta
+	if ((pointLine1 < point.x) && (pointLine2 > point.x))
+	{
+		return true;
+	}
+
 	return false;
 }

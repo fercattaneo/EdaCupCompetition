@@ -28,6 +28,8 @@ typedef struct // robot position and rotation
 class Robot
 {
 public:
+    ~Robot();
+
     string teamID;
     string robotID;
 

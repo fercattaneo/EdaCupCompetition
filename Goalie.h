@@ -8,9 +8,15 @@
 
 using namespace std;
 
-class goalie : public Players 
+class Goalie : public Players 
 {
 public:
+    Goalie();
+    ~Goalie();
+    virtual void update(inGameData_t * gameData);
+    void save(Vector3 ballPosition, Vector3 ballVelocity);
+
+    //TESTING
 
 private:
     

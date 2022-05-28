@@ -59,6 +59,7 @@ private:
     MQTTClient2 *mqttClient;
     vector<MQTTMessage> messagesToSend;
 
+    inGameData_t dataPassing;
     GameState gameState;
     string teamID;
     string oppTeamID;
@@ -69,7 +70,7 @@ private:
     Vector2 arcoTeam;
     Vector2 arcoOpposite;
 
-    void update();
+    void update(inGameData_t * dataPassing);
     void updatePositions();
     void assignMessagePayload(string topic, vector<char> &payload);
 
