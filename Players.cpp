@@ -207,24 +207,40 @@ void Players::secondShooterReposition (inGameData_t * data)  //capaz esta plagad
 	while(midPoints.empty())  //mira todos los puntos medios entre robots
 	{
 		Vector2 point = midPoints.back();
-		for(auto bot : *data->oppTeamRobots)  //mira distancias entre enemigo y pnto medio
+		for(auto bot : nearGoalEnemies)  //mira distancias entre enemigo y pnto medio
 		{
 			Vector3 botPos = bot->getPosition();
-			float distBotGoal = botPos.x - data->oppGoal->x;  //solo enemigos "cerca" del arco contrario
-			bool valid = (distBotGoal > -3 && distBotGoal < 3) ? true : false ;
-			if(valid)
+			float deltaX = point.x - botPos.x;
+			float deltaZ = point.y - botPos.z;
+			float square = (deltaX * deltaX) + (deltaZ * deltaZ);
+			float distance = sqrt(square);
+			if(distance < minDistance)   //selecciona al punto medio mas "comodo"
 			{
-				float deltaX = point.x - botPos.x;
-				float deltaZ = point.y - botPos.z;
-				float square = (deltaX * deltaX) + (deltaZ * deltaZ);
-				float distance = sqrt(square);
-				if(distance < minDistance)   //selecciona al punto medio mas "comodo"
-				{
-					minDistance = distance;
-					idealMidpoint = point;
-				}			
-			}
+				minDistance = distance;
+				idealMidpoint = point;
+			}			
 		}
+
+		float deltaX = point.x - data->oppGoal->x;      //analizo distancia con la 1ra esquina
+		float deltaZ = point.y - 3;
+		float square = (deltaX * deltaX) + (deltaZ * deltaZ);
+		float distance = sqrt(square);
+		if(distance < minDistance)   //selecciona al punto medio mas "comodo"
+		{
+			minDistance = distance;
+			idealMidpoint = point;
+		}	
+
+		deltaX = point.x - data->oppGoal->x; //analizo distancia con la 2da esquina
+		deltaZ = point.y + 3;
+		square = (deltaX * deltaX) + (deltaZ * deltaZ);
+		distance = sqrt(square);
+		if(distance < minDistance)   //selecciona al punto medio mas "comodo"
+		{
+			minDistance = distance;
+			idealMidpoint = point;
+		}	
+
 		midPoints.pop_back();
 	}
 	Vector3 idealSetPoint = {idealMidpoint.x, 0, idealMidpoint.y};

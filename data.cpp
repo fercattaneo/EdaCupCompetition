@@ -54,10 +54,12 @@ vector<char> getDataFromFloat(float data)
 
 /**
  * @brief: calculates the coordinate in reference from other 2 and a proportional value
- * @param: originPos - origin position of object
- * @param: finalPos - final position of reference
- * @param: proportion - proportional position [0 = origin ~~ 1 = final]
- * @return: coordinate calculated
+ * 
+ * @param originPos - origin position of object
+ * @param finalPos - final position of reference
+ * @param proportion - proportional position [0 = origin ~~ 1 = final]
+ * 
+ * @return coordinate calculated
  */
 Vector2 proportionalPosition(Vector2 originPos, Vector2 finalPos, float proportion)
 {
@@ -103,7 +105,7 @@ float calculateRotation(Vector2 originPos, Vector2 finalPos)
 	{
 		angle -= PI; // radians degrees
 	}
-	angle = angle * (180 / PI); // grados sexagecimal degrees
+	angle *= (180 / PI); // grados sexagecimal degrees
 
 	return angle;
 }
@@ -182,9 +184,8 @@ bool betweenTwoLines(Vector2 originPos, Vector2 finalPos, Vector2 point)
 	float origin = originPos.y - pendiente * originPos.x;
 	float Xpoint = (point.y - origin) / pendiente; 
 
-
 	float displacement;
-	float pointLine1;
+	float pointLine1 = Xpoint;
 	float pointLine2;  // tomo x de point y +- anchoDelPasillo / 2
 
 	// Calcular los puntos en la recta
