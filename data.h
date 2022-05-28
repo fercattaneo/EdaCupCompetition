@@ -25,6 +25,7 @@ bool isCloseTo(Vector2 originCoord, Vector2 destinationCoord, float nearRange);
 bool sameLine(Vector2 originPos, Vector2 finalPos, Vector2 mediumPos);
 
 //TESTING
-bool betweenTwoLines(Vector2 originPos, Vector2 finalPos, Vector2 point);
+bool betweenTwoLines(Vector2 originPos, Vector2 finalPos, Vector2 point, float displacement);
+float distanceOfCoords(Vector2 firstCoord, Vector2 secondCoord);
 
 #endif //  DATA_H

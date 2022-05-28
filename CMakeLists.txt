@@ -1,4 +1,3 @@
-
 cmake_minimum_required(VERSION 3.0)
 
 project("EDACUP")
@@ -17,7 +16,7 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     add_link_options(-fsanitize=undefined)
 endif()
 
-add_executable(main main.cpp MQTTClient2.cpp Players.cpp GameModel.cpp data.cpp Robot.cpp Goalie.cpp)
+add_executable(main main_test.cpp MQTTClient2.cpp Players.cpp GameModel.cpp data.cpp Robot.cpp Goalie.cpp)
 
 # Packages
 find_package(raylib REQUIRED)

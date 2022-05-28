@@ -21,10 +21,9 @@ Players::~Players()
  * @brief: assigns an identification number to the robot for simplifying the messagge recognition
  * @param playerNumber: string containing the indentification
  */
-void Players::start(string playerNumber)
+void Players::start(int playerNumber)
 {
-	// depende de la entrega
-	robotID = playerNumber.c_str();
+	robotID = playerNumber;
 }
 
 /**
@@ -32,8 +31,27 @@ void Players::start(string playerNumber)
  * 
  * @param gameData 
  */
-void Players::update(inGameData_t * gameData)
+void Players::update(inGameData_t &gameData)
 {
+	switch (fieldRol)   //POR AHORA REPOSICIONES NOMAS
+	{
+		case DEFENSE:
+			//shooterReposition(gameData);
+			break;
+		case DEFENSE2:
+			//shooterReposition(gameData);
+			break;
+		case MIDFIELDER:
+			//shooterReposition(gameData);
+			break;
+		case SHOOTER:
+			//shooterReposition(gameData);
+			break;
+		case SHOOTER2:
+			//secondShooterReposition(gameData);
+			break;
+		default: break;
+	}
 
 }
 
@@ -117,14 +135,14 @@ void Players::dissablePlayer(void)
 //TESTING
 
 
-void Players::shooterReposition (inGameData_t * data)  //capaz esta plagada de errores de punteros...
+void Players::shooterReposition (inGameData_t &data)  //capaz esta plagada de errores de punteros...
 {
 	vector<Vector2> midPoints;
-	for(auto bot1 : (*data->oppTeamRobots))   //obtengo los puntos medios entre enemigos
+	for(auto bot1 : (data.oppTeam))   //obtengo los puntos medios entre enemigos
 	{
-		for(auto bot2 : (*data->oppTeamRobots))
+		for(auto bot2 : (data.oppTeam))
 		{
-			if(bot2->robotID != bot1->robotID)
+			if(bot2->robotID > bot1->robotID)
 			{
 				Vector3 bot1pos = bot1->getPosition();
 				Vector3 bot2pos = bot2->getPosition();
@@ -142,17 +160,14 @@ void Players::shooterReposition (inGameData_t * data)  //capaz esta plagada de e
 	while(midPoints.empty())  //mira todos los puntos medios entre robots
 	{
 		Vector2 point = midPoints.back();
-		for(auto bot : *data->oppTeamRobots)  //mira distancias entre enemigo y pnto medio
+		for(auto bot : data.oppTeam)  //mira distancias entre enemigo y pnto medio
 		{
 			Vector3 botPos = bot->getPosition();
-			float distBotGoal = botPos.x - data->oppGoal->x;  //solo enemigos en el area contraria desde el pto penal
+			float distBotGoal = botPos.x - data.oppGoal.x;  //solo enemigos en el area contraria desde el pto penal
 			bool valid = (distBotGoal > -3 && distBotGoal < 3) ? true : false ;
 			if(valid)
 			{
-				float deltaX = point.x - botPos.x;
-				float deltaZ = point.y - botPos.z;
-				float square = (deltaX * deltaX) + (deltaZ * deltaZ);
-				float distance = sqrt(square);
+				float distance = distanceOfCoords(point, {botPos.x,botPos.z});
 				if(distance < minDistance)   //selecciona al punto medio mas "comodo"
 				{
 					minDistance = distance;
@@ -166,14 +181,14 @@ void Players::shooterReposition (inGameData_t * data)  //capaz esta plagada de e
 	this->setPosition(idealSetPoint);
 }
 
-void Players::secondShooterReposition (inGameData_t * data)  //capaz esta plagada de errores de punteros...
+void Players::secondShooterReposition (inGameData_t &data)  //capaz esta plagada de errores de punteros...
 {
 	vector<Vector2> midPoints;
 	vector <Robot *> nearGoalEnemies;
-	for(auto enemy : (*data->oppTeamRobots))
+	for(auto enemy : (data.oppTeam))
 	{
 		Vector3 enemyPos = enemy->getPosition();
-		float distEnemyGoal = enemyPos.x - data->oppGoal->x;  //solo enemigos "cerca" del arco contrario
+		float distEnemyGoal = enemyPos.x - data.oppGoal.x;  //solo enemigos "cerca" del arco contrario
 		if(distEnemyGoal < 2.5 && distEnemyGoal > -2.5)
 		{
 			nearGoalEnemies.push_back(enemy);
@@ -184,7 +199,7 @@ void Players::secondShooterReposition (inGameData_t * data)  //capaz esta plagad
 		Vector3 bot1pos = bot1->getPosition();
 		for(auto bot2 : nearGoalEnemies)
 		{
-			if(bot2->robotID != bot1->robotID)
+			if(bot2->robotID > bot1->robotID)
 			{
 				Vector3 bot2pos = bot2->getPosition();
 				Vector2 midPoint = proportionalPosition({bot1pos.x, bot1pos.z},
@@ -192,10 +207,10 @@ void Players::secondShooterReposition (inGameData_t * data)  //capaz esta plagad
 				midPoints.push_back(midPoint);
 			}
 		}
-		Vector2 firstCorner = {data->oppGoal->x, 3}; //calculo con una esquina
+		Vector2 firstCorner = {data.oppGoal.x, 3}; //calculo con una esquina
 		Vector2 firstCornerMidPoint = proportionalPosition({bot1pos.x, bot1pos.z}, firstCorner, 0.5);
 		midPoints.push_back(firstCornerMidPoint);
-		Vector2 secondCorner = {data->oppGoal->x, -3}; //calculo con otra esquina
+		Vector2 secondCorner = {data.oppGoal.x, -3}; //calculo con otra esquina
 		Vector2 secondCornerMidPoint = proportionalPosition({bot1pos.x, bot1pos.z}, secondCorner, 0.5);
 		midPoints.push_back(secondCornerMidPoint);
 	}
@@ -210,10 +225,7 @@ void Players::secondShooterReposition (inGameData_t * data)  //capaz esta plagad
 		for(auto bot : nearGoalEnemies)  //mira distancias entre enemigo y pnto medio
 		{
 			Vector3 botPos = bot->getPosition();
-			float deltaX = point.x - botPos.x;
-			float deltaZ = point.y - botPos.z;
-			float square = (deltaX * deltaX) + (deltaZ * deltaZ);
-			float distance = sqrt(square);
+			float distance = distanceOfCoords(point, {botPos.x,botPos.z});
 			if(distance < minDistance)   //selecciona al punto medio mas "comodo"
 			{
 				minDistance = distance;
@@ -221,20 +233,14 @@ void Players::secondShooterReposition (inGameData_t * data)  //capaz esta plagad
 			}			
 		}
 
-		float deltaX = point.x - data->oppGoal->x;      //analizo distancia con la 1ra esquina
-		float deltaZ = point.y - 3;
-		float square = (deltaX * deltaX) + (deltaZ * deltaZ);
-		float distance = sqrt(square);
+		float distance = distanceOfCoords(point, {data.oppGoal.x,3});
 		if(distance < minDistance)   //selecciona al punto medio mas "comodo"
 		{
 			minDistance = distance;
 			idealMidpoint = point;
 		}	
 
-		deltaX = point.x - data->oppGoal->x; //analizo distancia con la 2da esquina
-		deltaZ = point.y + 3;
-		square = (deltaX * deltaX) + (deltaZ * deltaZ);
-		distance = sqrt(square);
+		distance = distanceOfCoords(point, {data.oppGoal.x,-3});
 		if(distance < minDistance)   //selecciona al punto medio mas "comodo"
 		{
 			minDistance = distance;
@@ -256,11 +262,11 @@ void Players::secondShooterReposition (inGameData_t * data)  //capaz esta plagad
  */
 void Players::pass(Players objectivePlayer, inGameData_t &gameData)
 {
-	Vector2 ballPosition = {(*gameData.ballPosition).x, (*gameData.ballPosition).z};
+	Vector2 ballPosition = {gameData.ballPosition.x, gameData.ballPosition.z};
 	Vector2 objectivePlayerPosition = {objectivePlayer.getPosition().x, objectivePlayer.getPosition().z};
 	
 	// fijasrse si hay jugadores en el medio, devuelvo false o la tiro por arriba?
-	if(!checkForInterception(*gameData.oppTeamRobots, objectivePlayerPosition))
+	if(!checkForInterception(gameData.oppTeam, objectivePlayerPosition))
 	{
 		kickBallLogic(objectivePlayerPosition, ballPosition);
 	}
@@ -281,7 +287,7 @@ bool Players::checkForInterception(vector<Robot*> &oppTeam, Vector2 objective)
 	for (auto bot : oppTeam)
 	{
 		Vector2 botPosition = {bot->getPosition().x, bot->getPosition().z};
-		if (!betweenTwoLines(myPosition, objective, botPosition))  	// me fijo si algun robot esta
+		if (!betweenTwoLines(myPosition, objective, botPosition, 0.20f))  	// me fijo si algun robot esta
 		{															// en el pasillo donde voy a hacer el pase
 			possible = false;
 		}

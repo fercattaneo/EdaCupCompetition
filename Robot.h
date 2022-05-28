@@ -31,7 +31,7 @@ public:
     ~Robot();
 
     string teamID;
-    string robotID;
+    int robotID;
 
     Vector3 getPosition();
     Vector3 getRotation();

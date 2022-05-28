@@ -22,20 +22,23 @@ using namespace std;
 
 typedef struct
 {
-    Vector3 * ballPosition;
-    Vector3 * ballVelocity;
-    vector<Vector3> * teamPositions;
-    vector<Robot *> * oppTeamRobots;
-    Vector2 * myGoal;
-    Vector2 * oppGoal;
+    Vector3 ballPosition;
+    Vector3 ballVelocity;
+    vector<Vector3> teamPositions;
+    vector<Robot *> oppTeam;
+    Vector2 myGoal;                     
+    Vector2 oppGoal;                    
 } inGameData_t;
 
 // Role of each player
 enum PLAYERS_POSITION // for court role identification
 {
+    GOALIE,
     DEFENSE,
+    DEFENSE2,
     MIDFIELDER,
-    SHOOTER
+    SHOOTER,
+    SHOOTER2
 };
 
 class Players : public Robot
@@ -44,15 +47,14 @@ public:
     Players();
     ~Players();
 
-    virtual void update(inGameData_t * gameData);
-    void start(string playerNumber);
+    virtual void update(inGameData_t &gameData);
+    void start(int playerNumber);
     setPoint_t goToBall(Vector2 objectivePosition, Vector2 ballPosition, float proportional);
     setPoint_t kickBallLogic(Vector2 objectivePosition, Vector2 ballPosition);
 
-    PLAYERS_POSITION fieldRol;
+    int fieldRol;
     void toEnablePlayer(void);
     void dissablePlayer(void);
-
 
 private:
     bool enablePlayer;
@@ -61,10 +63,8 @@ private:
     void pass(Players objectivePlayer, inGameData_t &gameData);
     bool checkForInterception(vector<Robot*> &oppTeam, Vector2 objective);
     
-    vector<Vector2>* getOppMidpoints(inGameData_t * data);
-    void shooterReposition(inGameData_t * data);
-    void secondShooterReposition (inGameData_t * data);
+    void shooterReposition(inGameData_t &data);
+    void secondShooterReposition (inGameData_t &data);
 };
-
 
 #endif // PLAYERS_H

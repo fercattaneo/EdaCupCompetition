@@ -13,8 +13,8 @@ class Goalie : public Players
 public:
     Goalie();
     ~Goalie();
-    virtual void update(inGameData_t * gameData);
-    void save(Vector3 ballPosition, Vector3 ballVelocity);
+    virtual void update(inGameData_t &gameData);
+    void save(Vector3 ballPosition, Vector3 ballVelocity, Vector2 myGoal);
 
     //TESTING
 

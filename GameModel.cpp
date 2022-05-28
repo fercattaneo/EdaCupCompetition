@@ -22,13 +22,10 @@ GameModel::GameModel(MQTTClient2 &mqttClient, string myTeam)
 	this->oppTeamID = (myTeam == "1") ? "2" : "1";
 	Vector2 arco1 = {-4.5f, 0.0f};
 	Vector2 arco2 = {4.5f, 0.0f};
-	arcoTeam = (myTeam == "1") ? arco1 : arco2;
-	arcoOpposite = (myTeam == "1") ? arco2 : arco1;
-	for (int i = 0; i < 12; i++)
-	{
-		this->ball[i] = 0;
-	}
-	this->ball[0] = 1.5;
+	dataPassing.myGoal = (myTeam == "1") ? arco1 : arco2;
+	dataPassing.oppGoal = (myTeam == "1") ? arco2 : arco1;
+	dataPassing.ballPosition = {0,0,0};
+	dataPassing.ballVelocity = {0,0,0};
 
 	float PIDparameters[6] = {4, 0, 8, 0, 0, 0.005};
 	vector<char> payloadPID(6 * sizeof(float));
@@ -36,65 +33,34 @@ GameModel::GameModel(MQTTClient2 &mqttClient, string myTeam)
 
 	for (auto bot : team)
 	{
-		cout << "robot" + myTeam + "." + bot->robotID + "/pid/parameters/set" << endl;
-		this->mqttClient->publish("robot" + myTeam + "." + bot->robotID + "/pid/parameters/set", payloadPID);
+		cout << "robot" + myTeam + "." + to_string(bot->robotID) + "/pid/parameters/set" << endl;
+		this->mqttClient->publish("robot" + myTeam + "." + to_string(bot->robotID) + "/pid/parameters/set", payloadPID);
 	}
 
 	Robot enemy1;
-	oppTeam.push_back(&enemy1);
+	dataPassing.oppTeam.push_back(&enemy1);
 	Robot enemy2;
-	oppTeam.push_back(&enemy2);
+	dataPassing.oppTeam.push_back(&enemy2);
 	Robot enemy3;
-	oppTeam.push_back(&enemy3);
+	dataPassing.oppTeam.push_back(&enemy3);
 	Robot enemy4;
-	oppTeam.push_back(&enemy4);
+	dataPassing.oppTeam.push_back(&enemy4);
 	Robot enemy5;
-	oppTeam.push_back(&enemy5);
+	dataPassing.oppTeam.push_back(&enemy5);
 	Robot enemy6;
-	oppTeam.push_back(&enemy6);
+	dataPassing.oppTeam.push_back(&enemy6);
 
 	vector<Vector3> positions;
 	for(auto bot : team)
 	{
 		positions.push_back(bot->getPosition()); //pusheo 6 posiciones al vector
 	}
-	dataPassing.ballPosition = {(Vector3*) &this->ball[0]};
-	dataPassing.ballVelocity = {(Vector3*) &this->ball[3]};
-	dataPassing.teamPositions = &positions;
-	dataPassing.oppTeamRobots = &this->oppTeam;
-	dataPassing.myGoal = &arcoTeam;
-	dataPassing.oppGoal = &arcoOpposite;
 }
 
 GameModel::~GameModel()
 {
 	team.clear();
-	oppTeam.clear();
-}
-
-/**
- * @brief initializes players of the team
- *
- */
-void GameModel::start()
-{
-	cout << "GameModel START" << endl;
-	for (int playerNumber = 0; playerNumber < team.size(); playerNumber++)
-	{
-		team[playerNumber]->start(to_string(playerNumber + 1));
-	}
-}
-
-/**
- * @brief updates status of robots
- *
- */
-void GameModel::update(inGameData_t * dataPassing)
-{
-	for (auto player : team)
-	{
-		player->update(dataPassing);
-	}
+	dataPassing.oppTeam.clear();
 }
 
 /**
@@ -108,9 +74,12 @@ void GameModel::onMessage(string topic, vector<char> payload)
 {
 	if (!topic.compare("ball/motion/state")) // compare returns 0 if are equal
 	{
+		float ball[12];
 		memcpy(ball, &payload[0], payload.size());
+		dataPassing.ballPosition = { ball[0], ball[1], ball[2] };
+		dataPassing.ballVelocity = { ball[3], ball[4], ball[5] };
 
-		update(&dataPassing);
+		// update(dataPassing);
 
 		while (!messagesToSend.empty()) // sends all messages appended to message vector
 		{
@@ -121,6 +90,33 @@ void GameModel::onMessage(string topic, vector<char> payload)
 	}
 	else
 		assignMessagePayload(topic, payload);
+}
+
+/**
+ * @brief initializes players of the team
+ *
+ */
+void GameModel::start()
+{
+	cout << "GameModel START" << endl;
+
+	for (int playerNumber = 0; playerNumber < team.size(); playerNumber++)
+	{
+		team[playerNumber]->start(playerNumber);
+		team[playerNumber]->fieldRol = playerNumber;
+	}
+}
+
+/**
+ * @brief updates status of robots
+ *
+ */
+void GameModel::update(inGameData_t &dataPassing)
+{
+	for (auto player : team)
+	{
+		player->update(dataPassing);
+	}
 }
 
 /**
@@ -170,6 +166,10 @@ void GameModel::assignMessagePayload(string topic, vector<char> &payload)
 			team[robotIndex - 1]->setSpeed({payloadToFloat[3], payloadToFloat[4], payloadToFloat[5]});
 			team[robotIndex - 1]->setRotation({payloadToFloat[6], payloadToFloat[7], payloadToFloat[8]});
 			team[robotIndex - 1]->setAngularSpeed({payloadToFloat[9], payloadToFloat[10], payloadToFloat[11]});
+
+			dataPassing.teamPositions[robotIndex - 1].x = payloadToFloat[0];
+			dataPassing.teamPositions[robotIndex - 1].y = payloadToFloat[1];
+			dataPassing.teamPositions[robotIndex - 1].z = payloadToFloat[2];
 		}
 		else if (topic.compare(9, 11, "power/state") == 0)
 		{
@@ -190,10 +190,10 @@ void GameModel::assignMessagePayload(string topic, vector<char> &payload)
 			float payloadToFloat[12];
 			memcpy(payloadToFloat, &payload[0], payload.size());
 
-			oppTeam[robotIndex - 1]->setPosition({payloadToFloat[0], payloadToFloat[1], payloadToFloat[2]});
-			oppTeam[robotIndex - 1]->setSpeed({payloadToFloat[3], payloadToFloat[4], payloadToFloat[5]});
-			oppTeam[robotIndex - 1]->setRotation({payloadToFloat[6], payloadToFloat[7], payloadToFloat[8]});
-			oppTeam[robotIndex - 1]->setAngularSpeed({payloadToFloat[9], payloadToFloat[10], payloadToFloat[11]});
+			// dataPassing.oppTeam[robotIndex - 1]->setPosition({payloadToFloat[0], payloadToFloat[1], payloadToFloat[2]});
+			// dataPassing.oppTeam[robotIndex - 1]->setSpeed({payloadToFloat[3], payloadToFloat[4], payloadToFloat[5]});
+			// dataPassing.oppTeam[robotIndex - 1]->setRotation({payloadToFloat[6], payloadToFloat[7], payloadToFloat[8]});
+			// dataPassing.oppTeam[robotIndex - 1]->setAngularSpeed({payloadToFloat[9], payloadToFloat[10], payloadToFloat[11]});
 		}
 	}
 	else // error in the messagge recived or topic processing
@@ -277,8 +277,8 @@ void GameModel::updatePositions()
 {
 	for (auto teamRobot : team)
 	{
-		setPoint_t destination = teamRobot->goToBall(arcoOpposite, {ball[0], ball[2]}, 1.05f);
-		MQTTMessage setpointMessage = {"robot" + teamRobot->teamID + "." + teamRobot->robotID +
+		setPoint_t destination = teamRobot->goToBall(dataPassing.oppGoal, {dataPassing.ballPosition.x, dataPassing.ballPosition.z}, 1.05f);
+		MQTTMessage setpointMessage = {"robot" + teamRobot->teamID + "." + to_string(teamRobot->robotID) +
 										   "/pid/setpoint/set",
 									   getArrayFromSetPoint(destination)};
 		messagesToSend.push_back(setpointMessage);
@@ -366,7 +366,7 @@ void GameModel::setChipper(string robotID)
  */
 void GameModel::shootToGoal(Players *player)
 {
-	setPoint_t proxPlaceInCourt = player->kickBallLogic(arcoOpposite, {ball[0], ball[2]});
+	setPoint_t proxPlaceInCourt = player->kickBallLogic(dataPassing.oppGoal, {dataPassing.ballPosition.x, dataPassing.ballPosition.z});
 	setPoint_t kickValue = {100, 100, 100};
 
 	if ((proxPlaceInCourt.coord.x == kickValue.coord.x) &&
@@ -374,15 +374,15 @@ void GameModel::shootToGoal(Players *player)
 		(proxPlaceInCourt.rotation == kickValue.rotation)) // comparacion de igualdad de setpoints
 	{
 		if (player->getKickerCharge() >= 160)
-			setKicker(player->robotID);
+			setKicker(to_string(player->robotID));
 		else
-			voltageKickerChipper(player->robotID); // este orden por el pop_back del vector
+			voltageKickerChipper(to_string(player->robotID)); // este orden por el pop_back del vector
 	}
 	else // mover hasta el setpoint indicado
 	{
 		Vector3 posInCourt = player->getPosition();
 		proxPlaceInCourt.coord = proportionalPosition({posInCourt.x, posInCourt.z}, proxPlaceInCourt.coord, 0.33);
-		setSetpoint(proxPlaceInCourt, player->robotID);
+		setSetpoint(proxPlaceInCourt, to_string(player->robotID));
 	}
 }
 

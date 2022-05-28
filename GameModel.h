@@ -64,13 +64,9 @@ private:
     string teamID;
     string oppTeamID;
 
-    float ball[12];
     vector<Players *> team;
-    vector<Robot *> oppTeam;
-    Vector2 arcoTeam;
-    Vector2 arcoOpposite;
 
-    void update(inGameData_t * dataPassing);
+    void update(inGameData_t &dataPassing);
     void updatePositions();
     void assignMessagePayload(string topic, vector<char> &payload);
 

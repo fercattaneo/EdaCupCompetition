@@ -175,7 +175,7 @@ bool sameLine(Vector2 originPos, Vector2 finalPos, Vector2 mediumPos)
  * @return true 
  * @return false 
  */
-bool betweenTwoLines(Vector2 originPos, Vector2 finalPos, Vector2 point)
+bool betweenTwoLines(Vector2 originPos, Vector2 finalPos, Vector2 point, float displacement)
 {
 	float deltaX = finalPos.x - originPos.x;
 	float deltaY = finalPos.y - originPos.y;
@@ -184,9 +184,8 @@ bool betweenTwoLines(Vector2 originPos, Vector2 finalPos, Vector2 point)
 	float origin = originPos.y - pendiente * originPos.x;
 	float Xpoint = (point.y - origin) / pendiente; 
 
-	float displacement;
-	float pointLine1 = Xpoint;
-	float pointLine2;  // tomo x de point y +- anchoDelPasillo / 2
+	float pointLine1 = Xpoint - displacement;
+	float pointLine2 = Xpoint + displacement;  // tomo x de point y +- anchoDelPasillo / 2
 
 	// Calcular los puntos en la recta
 	if ((pointLine1 < point.x) && (pointLine2 > point.x))
@@ -195,4 +194,13 @@ bool betweenTwoLines(Vector2 originPos, Vector2 finalPos, Vector2 point)
 	}
 
 	return false;
+}
+
+float distanceOfCoords(Vector2 firstCoord, Vector2 secondCoord)
+{
+	float deltaX = firstCoord.x - secondCoord.x;
+	float deltaZ = firstCoord.y - secondCoord.y;
+	float square = (deltaX * deltaX) + (deltaZ * deltaZ);
+	float distance = sqrt(square);
+	return distance;
 }
