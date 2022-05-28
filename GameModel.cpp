@@ -79,7 +79,7 @@ void GameModel::onMessage(string topic, vector<char> payload)
 		dataPassing.ballPosition = { ball[0], ball[1], ball[2] };
 		dataPassing.ballVelocity = { ball[3], ball[4], ball[5] };
 
-		// update(dataPassing);
+		update(dataPassing);
 
 		while (!messagesToSend.empty()) // sends all messages appended to message vector
 		{
@@ -105,6 +105,7 @@ void GameModel::start()
 		team[playerNumber]->start(playerNumber);
 		team[playerNumber]->fieldRol = playerNumber;
 	}
+	dataPassing.teamPositions.resize(6); //le damos un tamaño al vector para que no sea vacío
 }
 
 /**

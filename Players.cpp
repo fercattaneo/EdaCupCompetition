@@ -31,7 +31,7 @@ void Players::start(int playerNumber)
  * 
  * @param gameData 
  */
-void Players::update(inGameData_t &gameData)
+void Players::update(inGameData_t gameData)
 {
 	switch (fieldRol)   //POR AHORA REPOSICIONES NOMAS
 	{
@@ -45,10 +45,10 @@ void Players::update(inGameData_t &gameData)
 			//shooterReposition(gameData);
 			break;
 		case SHOOTER:
-			//shooterReposition(gameData);
+			shooterReposition(gameData);
 			break;
 		case SHOOTER2:
-			//secondShooterReposition(gameData);
+			secondShooterReposition(gameData);
 			break;
 		default: break;
 	}
@@ -135,7 +135,7 @@ void Players::dissablePlayer(void)
 //TESTING
 
 
-void Players::shooterReposition (inGameData_t &data)  //capaz esta plagada de errores de punteros...
+void Players::shooterReposition (inGameData_t data)  //capaz esta plagada de errores de punteros...
 {
 	vector<Vector2> midPoints;
 	for(auto bot1 : (data.oppTeam))   //obtengo los puntos medios entre enemigos

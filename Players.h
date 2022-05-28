@@ -47,7 +47,7 @@ public:
     Players();
     ~Players();
 
-    virtual void update(inGameData_t &gameData);
+    virtual void update(inGameData_t gameData);
     void start(int playerNumber);
     setPoint_t goToBall(Vector2 objectivePosition, Vector2 ballPosition, float proportional);
     setPoint_t kickBallLogic(Vector2 objectivePosition, Vector2 ballPosition);
@@ -63,7 +63,7 @@ private:
     void pass(Players objectivePlayer, inGameData_t &gameData);
     bool checkForInterception(vector<Robot*> &oppTeam, Vector2 objective);
     
-    void shooterReposition(inGameData_t &data);
+    void shooterReposition(inGameData_t data);
     void secondShooterReposition (inGameData_t &data);
 };
 
