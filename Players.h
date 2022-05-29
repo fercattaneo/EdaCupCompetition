@@ -25,7 +25,7 @@ typedef struct
     Vector3 ballPosition;
     Vector3 ballVelocity;
     vector<Vector3> teamPositions;
-    vector<Robot *> oppTeam;
+    vector<Vector3> oppTeamPositions;
     Vector2 myGoal;                     
     Vector2 oppGoal;                    
 } inGameData_t;
@@ -51,6 +51,7 @@ public:
     void start(int playerNumber);
     setPoint_t goToBall(Vector2 objectivePosition, Vector2 ballPosition, float proportional);
     setPoint_t kickBallLogic(Vector2 objectivePosition, Vector2 ballPosition);
+    
 
     int fieldRol;
     void toEnablePlayer(void);
@@ -61,7 +62,7 @@ private:
 
     //TESTING
     void pass(Players objectivePlayer, inGameData_t &gameData);
-    bool checkForInterception(vector<Robot*> &oppTeam, Vector2 objective);
+    bool checkForInterception(vector<Vector3> &oppTeam, Vector2 objective);
     
     void shooterReposition(inGameData_t data);
     void secondShooterReposition (inGameData_t &data);

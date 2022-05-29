@@ -63,3 +63,11 @@ float Robot::getKickerCharge()
 {
     return powerLevel.z;
 }
+
+setPoint_t Robot::getSetPoint()
+{
+    setPoint_t setpoint;
+    setpoint.coord = { position.x, position.z };
+    setpoint.rotation = rotation.y;
+	return (setpoint);
+}

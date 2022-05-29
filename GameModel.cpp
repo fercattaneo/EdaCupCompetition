@@ -36,7 +36,7 @@ GameModel::GameModel(MQTTClient2 &mqttClient, string myTeam)
 		cout << "robot" + myTeam + "." + to_string(bot->robotID) + "/pid/parameters/set" << endl;
 		this->mqttClient->publish("robot" + myTeam + "." + to_string(bot->robotID) + "/pid/parameters/set", payloadPID);
 	}
-
+	/*
 	Robot enemy1;
 	dataPassing.oppTeam.push_back(&enemy1);
 	Robot enemy2;
@@ -48,7 +48,7 @@ GameModel::GameModel(MQTTClient2 &mqttClient, string myTeam)
 	Robot enemy5;
 	dataPassing.oppTeam.push_back(&enemy5);
 	Robot enemy6;
-	dataPassing.oppTeam.push_back(&enemy6);
+	dataPassing.oppTeam.push_back(&enemy6);*/
 
 	vector<Vector3> positions;
 	for(auto bot : team)
@@ -60,7 +60,7 @@ GameModel::GameModel(MQTTClient2 &mqttClient, string myTeam)
 GameModel::~GameModel()
 {
 	team.clear();
-	dataPassing.oppTeam.clear();
+	dataPassing.oppTeamPositions.clear();
 }
 
 /**
@@ -106,6 +106,7 @@ void GameModel::start()
 		team[playerNumber]->fieldRol = playerNumber;
 	}
 	dataPassing.teamPositions.resize(6); //le damos un tamaño al vector para que no sea vacío
+	dataPassing.oppTeamPositions.resize(6);
 }
 
 /**
@@ -118,6 +119,7 @@ void GameModel::update(inGameData_t &dataPassing)
 	{
 		player->update(dataPassing);
 	}
+	updatePositions();
 }
 
 /**
@@ -191,10 +193,10 @@ void GameModel::assignMessagePayload(string topic, vector<char> &payload)
 			float payloadToFloat[12];
 			memcpy(payloadToFloat, &payload[0], payload.size());
 
-			// dataPassing.oppTeam[robotIndex - 1]->setPosition({payloadToFloat[0], payloadToFloat[1], payloadToFloat[2]});
-			// dataPassing.oppTeam[robotIndex - 1]->setSpeed({payloadToFloat[3], payloadToFloat[4], payloadToFloat[5]});
-			// dataPassing.oppTeam[robotIndex - 1]->setRotation({payloadToFloat[6], payloadToFloat[7], payloadToFloat[8]});
-			// dataPassing.oppTeam[robotIndex - 1]->setAngularSpeed({payloadToFloat[9], payloadToFloat[10], payloadToFloat[11]});
+			dataPassing.oppTeamPositions[robotIndex - 1].x = payloadToFloat[0];
+			dataPassing.oppTeamPositions[robotIndex - 1].y = payloadToFloat[1];
+			dataPassing.oppTeamPositions[robotIndex - 1].z = payloadToFloat[2];
+
 		}
 	}
 	else // error in the messagge recived or topic processing
@@ -278,7 +280,7 @@ void GameModel::updatePositions()
 {
 	for (auto teamRobot : team)
 	{
-		setPoint_t destination = teamRobot->goToBall(dataPassing.oppGoal, {dataPassing.ballPosition.x, dataPassing.ballPosition.z}, 1.05f);
+		setPoint_t destination = teamRobot->getSetPoint();
 		MQTTMessage setpointMessage = {"robot" + teamRobot->teamID + "." + to_string(teamRobot->robotID) +
 										   "/pid/setpoint/set",
 									   getArrayFromSetPoint(destination)};
