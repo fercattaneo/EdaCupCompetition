@@ -24,10 +24,12 @@ Players::~Players()
 void Players::start(int playerNumber)
 {
 	robotID = playerNumber;
+	setSetpoint({ 20,20,20 });
 	if(playerNumber == 5)
 	{
-		setPosition({ -1.5,0,0 });
+		setSetpoint({ -1.5,0,0 });
 	}
+	//setSetpoint({ -4.5,0,0 });
 }
 
 /**
@@ -154,30 +156,40 @@ void Players::shooterReposition(inGameData_t data)  //capaz esta plagada de erro
 	}
 
 	float maxDist = 0;
+	Vector2 auxMidpoint = { 0,0 };
 	Vector2 idealMidpoint = { 0,0 };
-	float minDistance = 9.0;
+	float maxDistance = 0.0;   // distacia maxima entre todos los midpoints y todos los robots
+	float minDistance = 9.0;   // distancia minima entre midpoint y todos los robots
 
-	while (midPoints.empty())  //mira todos los puntos medios entre robots
+	while (!midPoints.empty())  //mira todos los puntos medios entre robots
 	{
 		Vector2 point = midPoints.back();
 		for (int bot = 0; bot < 6; bot++)  //mira distancias entre enemigo y pnto medio
 		{
-			float distBotGoal = data.oppTeamPositions[bot].x - data.oppGoal.x;  //solo enemigos en el area contraria desde el pto penal
-			bool valid = (distBotGoal > -3 && distBotGoal < 3) ? true : false;
-			if (valid)
-			{
+			//float distBotGoal = data.oppTeamPositions[bot].x - data.oppGoal.x;  //solo enemigos en el area contraria desde el pto penal
+			//bool valid = (distBotGoal > -3 && distBotGoal < 3) ? true : false;
+			//if (valid)
+			//{
 				float distance = distanceOfCoords(point, { data.oppTeamPositions[bot].x,data.oppTeamPositions[bot].z });
-				if (distance < minDistance)   //selecciona al punto medio mas "comodo"
+				if (/*distance>0.5 &&*/ distance < minDistance)   //selecciona al punto medio mas "comodo"
 				{
 					minDistance = distance;
-					idealMidpoint = point;
 				}
-			}
+			//}
 		}
+		if(minDistance > maxDistance)
+		{
+			maxDistance = minDistance;
+			idealMidpoint = point; //marco pos ideal
+		}
+		minDistance = 9.0;
 		midPoints.pop_back();
 	}
-	Vector3 idealSetPoint = { idealMidpoint.x, 0, idealMidpoint.y };
-	this->setPosition(idealSetPoint);
+
+	setPoint_t idealSetPoint; 
+	idealSetPoint.coord ={ idealMidpoint.x, idealMidpoint.y };
+	idealSetPoint.rotation = 0;
+	this->setSetpoint(idealSetPoint);
 }
 
 void Players::secondShooterReposition(inGameData_t& data)  //capaz esta plagada de errores de punteros...

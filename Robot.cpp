@@ -37,6 +37,10 @@ void Robot::setPowerLevels(Vector3 powerValues)
 {
     powerLevel = powerValues;
 }
+void Robot::setSetpoint(setPoint_t setpoint)
+{
+    this->setpoint = setpoint;
+}
 
 /* GETTERS */
 Vector3 Robot::getPosition()
@@ -66,8 +70,8 @@ float Robot::getKickerCharge()
 
 setPoint_t Robot::getSetPoint()
 {
-    setPoint_t setpoint;
-    setpoint.coord = { position.x, position.z };
+    return setpoint; //TODO :Cambiar esto, no podemos actualizarlo con la posición  
+    /*setpoint.coord = {position.x, position.z};
     setpoint.rotation = rotation.y;
-	return (setpoint);
+	return (setpoint);*/
 }

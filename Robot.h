@@ -45,6 +45,7 @@ public:
     void setSpeed(Vector3 newSpeed);
     void setAngularSpeed(Vector3 newAngSpeed);
     void setPowerLevels(Vector3 powerValues);
+    void setSetpoint(setPoint_t setpoint);
 
 protected:
     Vector3 position;
@@ -52,6 +53,7 @@ protected:
     Vector3 speed;
     Vector3 angularSpeed;
     Vector3 powerLevel; // x for consume, y for battery level, z for kicker charge
+    setPoint_t setpoint;
 };
 
 #endif
