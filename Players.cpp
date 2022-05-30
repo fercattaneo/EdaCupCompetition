@@ -155,7 +155,6 @@ void Players::shooterReposition(inGameData_t data)  //capaz esta plagada de erro
 		}
 	}
 
-	float maxDist = 0;
 	Vector2 auxMidpoint = { 0,0 };
 	Vector2 idealMidpoint = { 0,0 };
 	float maxDistance = 0.0;   // distacia maxima entre todos los midpoints y todos los robots
@@ -171,7 +170,7 @@ void Players::shooterReposition(inGameData_t data)  //capaz esta plagada de erro
 			//if (valid)
 			//{
 				float distance = distanceOfCoords(point, { data.oppTeamPositions[bot].x,data.oppTeamPositions[bot].z });
-				if (/*distance>0.5 &&*/ distance < minDistance)   //selecciona al punto medio mas "comodo"
+				if (distance < minDistance)   //selecciona al punto medio mas "comodo"
 				{
 					minDistance = distance;
 				}
@@ -195,33 +194,32 @@ void Players::shooterReposition(inGameData_t data)  //capaz esta plagada de erro
 void Players::secondShooterReposition(inGameData_t& data)  //capaz esta plagada de errores de punteros...
 {
 	vector<Vector2> midPoints;
-	vector <Robot*> nearGoalEnemies;
-	/*for (int enemy = 0; enemy < 6; enemy++)
+	// vector<Vector3> nearGoalEnemies;
+	// for (int enemy = 0; enemy < 6; enemy++)
+	// {
+	// 	float distEnemyGoal = data.oppTeamPositions[enemy].x - data.oppGoal.x;  //solo enemigos "cerca" del arco contrario
+	// 	if (distEnemyGoal < 2.5 && distEnemyGoal > -2.5)
+	// 	{
+	// 		nearGoalEnemies.push_back(data.oppTeamPositions[enemy]);
+	// 	}
+	// }
+	for (auto bot1 : data.oppTeamPositions)   //obtengo los puntos medios entre enemigos
 	{
-		float distEnemyGoal = data.oppTeamPositions[enemy].x - data.oppGoal.x;  //solo enemigos "cerca" del arco contrario
-		if (distEnemyGoal < 2.5 && distEnemyGoal > -2.5)
+		for (auto bot2 : data.oppTeamPositions)
 		{
-			nearGoalEnemies.push_back(enemy);
-		}
-	}
-	for (auto bot1 : nearGoalEnemies)   //obtengo los puntos medios entre enemigos
-	{
-		Vector3 bot1pos = bot1->getPosition();
-		for (auto bot2 : nearGoalEnemies)
-		{
-			if (bot2->robotID > bot1->robotID)
+			float distanceBetweenEnemies = distanceOfCoords({bot1.x,bot1.z}, {bot2.x,bot2.z});
+			if(distanceBetweenEnemies > 0.2)
 			{
-				Vector3 bot2pos = bot2->getPosition();
-				Vector2 midPoint = proportionalPosition({ bot1pos.x, bot1pos.z },
-					{ bot2pos.x, bot2pos.z }, 0.5);
+				Vector2 midPoint = proportionalPosition({ bot1.x, bot1.z },
+					{ bot2.x, bot2.z }, 0.5);
 				midPoints.push_back(midPoint);
 			}
 		}
 		Vector2 firstCorner = { data.oppGoal.x, 3 }; //calculo con una esquina
-		Vector2 firstCornerMidPoint = proportionalPosition({ bot1pos.x, bot1pos.z }, firstCorner, 0.5);
+		Vector2 firstCornerMidPoint = proportionalPosition({ bot1.x, bot1.z}, firstCorner, 0.5);
 		midPoints.push_back(firstCornerMidPoint);
 		Vector2 secondCorner = { data.oppGoal.x, -3 }; //calculo con otra esquina
-		Vector2 secondCornerMidPoint = proportionalPosition({ bot1pos.x, bot1pos.z }, secondCorner, 0.5);
+		Vector2 secondCornerMidPoint = proportionalPosition({ bot1.x, bot1.z }, secondCorner, 0.5);
 		midPoints.push_back(secondCornerMidPoint);
 	}
 
@@ -232,78 +230,70 @@ void Players::secondShooterReposition(inGameData_t& data)  //capaz esta plagada 
 	while (midPoints.empty())  //mira todos los puntos medios entre robots
 	{
 		Vector2 point = midPoints.back();
-		for (auto bot : nearGoalEnemies)  //mira distancias entre enemigo y pnto medio
+		for (auto bot : data.oppTeamPositions)  //mira distancias entre enemigo y pnto medio
 		{
-			Vector3 botPos = bot->getPosition();
-			float distance = distanceOfCoords(point, { botPos.x,botPos.z });
+			float distance = distanceOfCoords(point, { bot.x,bot.z });
 			if (distance < minDistance)   //selecciona al punto medio mas "comodo"
-			{
 				minDistance = distance;
-				idealMidpoint = point;
-			}
 		}
 
 		float distance = distanceOfCoords(point, { data.oppGoal.x,3 });
 		if (distance < minDistance)   //selecciona al punto medio mas "comodo"
-		{
 			minDistance = distance;
-			idealMidpoint = point;
-		}
 
 		distance = distanceOfCoords(point, { data.oppGoal.x,-3 });
 		if (distance < minDistance)   //selecciona al punto medio mas "comodo"
-		{
 			minDistance = distance;
+
+		if(minDistance > maxDist)
+		{
+			maxDist = minDistance;
 			idealMidpoint = point;
 		}
-
+		minDistance = 9.0;
 		midPoints.pop_back();
 	}
-	Vector3 idealSetPoint = { idealMidpoint.x, 0, idealMidpoint.y };
-	this->setPosition(idealSetPoint);*/
+	setPoint_t idealSetPoint; 
+	cout << "2nd shooter: " << idealMidpoint.x << " , " << idealMidpoint.y << endl;
+	idealSetPoint.coord ={ idealMidpoint.x, idealMidpoint.y };
+	idealSetPoint.rotation = 0;
+	this->setSetpoint(idealSetPoint);
 }
 
 
-/**
- * @brief
- *
- * @param objectivePlayer
- * @param gameData
- */
-void Players::pass(Players objectivePlayer, inGameData_t& gameData)
-{
-	Vector2 ballPosition = { gameData.ballPosition.x, gameData.ballPosition.z };
-	Vector2 objectivePlayerPosition = { objectivePlayer.getPosition().x, objectivePlayer.getPosition().z };
+// /**
+//  * @brief
+//  *
+//  * @param objectivePlayer
+//  * @param gameData
+//  */
+// void Players::pass(Vector3 objectivePlayer, inGameData_t& gameData)
+// {
+// 	Vector2 ballPosition = { gameData.ballPosition.x, gameData.ballPosition.z };
+// 	Vector2 objectivePlayerPosition = { objectivePlayer.x, objectivePlayer.z };
 
-	// fijasrse si hay jugadores en el medio, devuelvo false o la tiro por arriba?
-	if (!checkForInterception(gameData.oppTeamPositions, objectivePlayerPosition))
-	{
-		kickBallLogic(objectivePlayerPosition, ballPosition);
-	}
-}
+// 	setPoint_t proxPlaceInCourt;
+// 	setPoint_t kickValue = { 100, 100, 100 };
 
-/**
- * @brief checks if a pass is possible
- *
- * @param oppTeam
- * @return true if possible
- * @return false if not
- */
-bool Players::checkForInterception(vector<Vector3>& oppTeamPositions, Vector2 objective)
-{
-	bool possible = true;
-	Vector2 myPosition = { position.x, position.z };
-
-	for (int bot=0;bot<6;bot++)
-	{
-		Vector2 botPosition = { oppTeamPositions[bot].x, oppTeamPositions[bot].z };
-		if (!betweenTwoLines(myPosition, objective, botPosition, 0.20f))  	// me fijo si algun robot esta
-		{															// en el pasillo donde voy a hacer el pase
-			possible = false;
-		}
-	}
-
-	return possible;
-}
+// 	// fijasrse si hay jugadores en el medio, devuelvo false o la tiro por arriba?
+// 	if (!checkForInterception(gameData.oppTeamPositions, objectivePlayerPosition))
+// 	{
+// 		proxPlaceInCourt = kickBallLogic(objectivePlayerPosition, ballPosition);
+		
+// 		// if ((proxPlaceInCourt.coord.x == kickValue.coord.x) &&
+// 		// 	(proxPlaceInCourt.coord.y == kickValue.coord.y) &&
+// 		// 	(proxPlaceInCourt.rotation == kickValue.rotation)) 		// comparacion de igualdad de setpoints
+// 		// {
+// 		// 	if (getKickerCharge() >= 160)
+// 		// 		// setKicker(to_string(player->robotID));
+// 		// 	// else
+// 		// 		// voltageKickerChipper(to_string(player->robotID)); 	// este orden por el pop_back del vector
+// 		// }
+// 		// else // mover hasta el setpoint indicado
+// 		// {
+// 		// 	// setpoint = 
+// 		// }
+// 	}
+// }
 
 

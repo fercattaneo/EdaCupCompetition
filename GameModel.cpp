@@ -55,6 +55,8 @@ GameModel::GameModel(MQTTClient2& mqttClient, string myTeam)
 	{
 		positions.push_back(bot->getPosition()); //pusheo 6 posiciones al vector
 	}
+	positions = dataPassing.teamPositions;
+
 }
 
 GameModel::~GameModel()
@@ -105,7 +107,7 @@ void GameModel::start()
 		team[playerNumber]->start(playerNumber);
 		team[playerNumber]->fieldRol = playerNumber;
 	}
-	dataPassing.teamPositions.resize(6); //le damos un tamaño al vector para que no sea vacío
+	dataPassing.teamPositions.resize(6); 		//le damos un tamaño al vector para que no sea vacío
 	dataPassing.oppTeamPositions.resize(6);
 }
 
@@ -283,10 +285,11 @@ void GameModel::updatePositions()
 		setPoint_t destination = teamRobot->getSetPoint();
 		if (destination.coord.x != 20 && destination.coord.y != 20 && destination.rotation != 20)
 		{
-			MQTTMessage setpointMessage = { "robot" + teamID + "." + to_string(teamRobot->robotID) +
-											   "/pid/setpoint/set",
-										   getArrayFromSetPoint(destination) };
-			messagesToSend.push_back(setpointMessage);
+			setSetpoint(destination, teamRobot->robotID);
+			// MQTTMessage setpointMessage = { "robot" + teamID + "." + to_string(teamRobot->robotID) +
+			// 								   "/pid/setpoint/set",
+			// 							   getArrayFromSetPoint(destination) };
+			// messagesToSend.push_back(setpointMessage);
 		}
 	}
 }
@@ -365,31 +368,63 @@ void GameModel::setChipper(string robotID)
 }
 
 /**
- * @brief gets the robot to the ball location and, if positioned
- * kikcs the ball
- *
- * @param player
+ * @brief 
+ * 
+ * @param player 
+ * @param objectivePosition 
  */
-void GameModel::shootToGoal(Players* player)
+void GameModel::shoot(Players* player, Vector2 objectivePosition)
 {
-	setPoint_t proxPlaceInCourt = player->kickBallLogic(dataPassing.oppGoal, { dataPassing.ballPosition.x, dataPassing.ballPosition.z });
+	setPoint_t proxPlaceInCourt = player->kickBallLogic(objectivePosition, { dataPassing.ballPosition.x, dataPassing.ballPosition.z });
 	setPoint_t kickValue = { 100, 100, 100 };
+	Vector2 playerPosition = {player->getPosition().x, player->getPosition().z}; 
 
-	if ((proxPlaceInCourt.coord.x == kickValue.coord.x) &&
-		(proxPlaceInCourt.coord.y == kickValue.coord.y) &&
-		(proxPlaceInCourt.rotation == kickValue.rotation)) // comparacion de igualdad de setpoints
+	if (!checkForInterception(dataPassing.oppTeamPositions, objectivePosition, playerPosition))
 	{
-		if (player->getKickerCharge() >= 160)
-			setKicker(to_string(player->robotID));
-		else
-			voltageKickerChipper(to_string(player->robotID)); // este orden por el pop_back del vector
+		if ((proxPlaceInCourt.coord.x == kickValue.coord.x) &&
+			(proxPlaceInCourt.coord.y == kickValue.coord.y) &&
+			(proxPlaceInCourt.rotation == kickValue.rotation)) // comparacion de igualdad de setpoints
+		{
+			if (player->getKickerCharge() >= 160)
+				setKicker(to_string(player->robotID));
+			else
+				voltageKickerChipper(to_string(player->robotID)); // este orden por el pop_back del vector
+		}
+		else // mover hasta el setpoint indicado
+		{
+			Vector3 posInCourt = player->getPosition();
+			setSetpoint(proxPlaceInCourt, player->robotID);
+		}
 	}
-	else // mover hasta el setpoint indicado
+	// else
+	// {
+	// 	//Ver como calcular la fuerza para pareat por arriba
+	// }
+}
+
+/**
+ * @brief 
+ * 
+ * @param oppTeamPositions 
+ * @param objective 
+ * @param teamPosition 
+ * @return true if possible
+ * @return false if not
+ */
+bool GameModel::checkForInterception(vector<Vector3>& oppTeamPositions, Vector2 objective, Vector2 teamPosition)
+{
+	bool possible = true;
+
+	for (int bot=0;bot<6;bot++)
 	{
-		Vector3 posInCourt = player->getPosition();
-		proxPlaceInCourt.coord = proportionalPosition({ posInCourt.x, posInCourt.z }, proxPlaceInCourt.coord, 0.025);
-		setSetpoint(proxPlaceInCourt, to_string(player->robotID));
+		Vector2 botPosition = { oppTeamPositions[bot].x, oppTeamPositions[bot].z };
+		if (!betweenTwoLines(teamPosition, objective, botPosition, 0.20f))  	// me fijo si algun robot esta
+		{															// en el pasillo donde voy a hacer el pase
+			possible = false;
+		}
 	}
+
+	return possible;
 }
 
 /**
@@ -398,9 +433,12 @@ void GameModel::shootToGoal(Players* player)
  * @param setpoint position to set in the robot
  * @param robotID number of robot to change the setpoint
  */
-void GameModel::setSetpoint(setPoint_t setpoint, string robotID)
+void GameModel::setSetpoint(setPoint_t setpoint, int robotID)
 {
-	MQTTMessage setpointMessage = { "robot" + teamID + "." + robotID + "/pid/setpoint/set",
+	Players * bot = team[robotID];
+	Vector3 posInCourt = bot->getPosition();
+	setpoint.coord = proportionalPosition({ posInCourt.x, posInCourt.z }, setpoint.coord, 0.25);
+	MQTTMessage setpointMessage = { "robot" + teamID + "." + to_string(robotID) + "/pid/setpoint/set",
 								   getArrayFromSetPoint(setpoint) };
 	messagesToSend.push_back(setpointMessage);
 }

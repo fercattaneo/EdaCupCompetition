@@ -61,8 +61,7 @@ private:
     bool enablePlayer;
 
     //TESTING
-    void pass(Players objectivePlayer, inGameData_t &gameData);
-    bool checkForInterception(vector<Vector3> &oppTeam, Vector2 objective);
+    // void pass(Vector3 objectivePlayer, inGameData_t &gameData);
     
     void shooterReposition(inGameData_t data);
     void secondShooterReposition (inGameData_t &data);

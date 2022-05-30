@@ -15,6 +15,7 @@
 #include "MQTTClient2.h"
 #include "Players.h"
 #include "data.h"
+#include "proximityMap.h"
 
 using namespace std;
 
@@ -70,9 +71,10 @@ private:
     void updatePositions();
     void assignMessagePayload(string topic, vector<char> &payload);
 
-    void setSetpoint(setPoint_t setpoint, string robotID);
+    void setSetpoint(setPoint_t setpoint, int robotID);
 
-    void shootToGoal(Players *player);
+    void shoot(Players *player, Vector2 objectivePosition);
+    bool checkForInterception(vector<Vector3> &oppTeam, Vector2 objective, Vector2 teamPosition);
     void voltageKickerChipper(string robotID);
     void setDribbler(string robotID);
     void setChipper(string robotID);
