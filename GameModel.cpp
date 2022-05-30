@@ -18,8 +18,8 @@
 GameModel::GameModel(MQTTClient2& mqttClient, string myTeam)
 {
 	this->mqttClient = &mqttClient;
-	this->teamID = myTeam;
-	this->oppTeamID = (myTeam == "1") ? "2" : "1";
+	teamID = myTeam;
+	oppTeamID = (myTeam == "1") ? "2" : "1";
 	Vector2 arco1 = { -4.5f, 0.0f };
 	Vector2 arco2 = { 4.5f, 0.0f };
 	dataPassing.myGoal = (myTeam == "1") ? arco1 : arco2;
@@ -36,26 +36,13 @@ GameModel::GameModel(MQTTClient2& mqttClient, string myTeam)
 		cout << "robot" + myTeam + "." + to_string(bot->robotID) + "/pid/parameters/set" << endl;
 		this->mqttClient->publish("robot" + myTeam + "." + to_string(bot->robotID) + "/pid/parameters/set", payloadPID);
 	}
-	/*
-	Robot enemy1;
-	dataPassing.oppTeam.push_back(&enemy1);
-	Robot enemy2;
-	dataPassing.oppTeam.push_back(&enemy2);
-	Robot enemy3;
-	dataPassing.oppTeam.push_back(&enemy3);
-	Robot enemy4;
-	dataPassing.oppTeam.push_back(&enemy4);
-	Robot enemy5;
-	dataPassing.oppTeam.push_back(&enemy5);
-	Robot enemy6;
-	dataPassing.oppTeam.push_back(&enemy6);*/
 
-	vector<Vector3> positions;
-	for (auto bot : team)
-	{
-		positions.push_back(bot->getPosition()); //pusheo 6 posiciones al vector
-	}
-	positions = dataPassing.teamPositions;
+	// vector<Vector3> positions;
+	// for (auto bot : team)
+	// {
+	// 	positions.push_back(bot->getPosition()); //pusheo 6 posiciones al vector
+	// }
+	// positions = dataPassing.teamPositions;
 
 }
 
@@ -435,10 +422,9 @@ bool GameModel::checkForInterception(vector<Vector3>& oppTeamPositions, Vector2 
  */
 void GameModel::setSetpoint(setPoint_t setpoint, int robotID)
 {
-	Players * bot = team[robotID];
-	Vector3 posInCourt = bot->getPosition();
-	setpoint.coord = proportionalPosition({ posInCourt.x, posInCourt.z }, setpoint.coord, 0.25);
-	MQTTMessage setpointMessage = { "robot" + teamID + "." + to_string(robotID) + "/pid/setpoint/set",
+	Vector3 posInCourt = dataPassing.teamPositions[robotID];
+	setpoint.coord = proportionalPosition({ posInCourt.x, posInCourt.z }, setpoint.coord, 0.5);
+	MQTTMessage setpointMessage = { "robot" + teamID + "." + to_string(robotID + 1) + "/pid/setpoint/set",
 								   getArrayFromSetPoint(setpoint) };
 	messagesToSend.push_back(setpointMessage);
 }

@@ -6,6 +6,7 @@
  * @brief Source file of the players class module.
  *******************************************************************/
 #include "Players.h"
+#define MODULE(x) (((x) > 0)?(x):(-(x)))
 
 using namespace std;
 
@@ -29,7 +30,6 @@ void Players::start(int playerNumber)
 	{
 		setSetpoint({ -1.5,0,0 });
 	}
-	//setSetpoint({ -4.5,0,0 });
 }
 
 /**
@@ -41,22 +41,25 @@ void Players::update(inGameData_t gameData)
 {
 	switch (fieldRol)   //POR AHORA REPOSICIONES NOMAS
 	{
-	case DEFENSE:
-		//shooterReposition(gameData);
-		break;
-	case DEFENSE2:
-		//shooterReposition(gameData);
-		break;
-	case MIDFIELDER:
-		//shooterReposition(gameData);
-		break;
-	case SHOOTER:
-		shooterReposition(gameData);
-		break;
-	case SHOOTER2:
-		secondShooterReposition(gameData);
-		break;
-	default: break;
+		case GOALIE:
+			save(gameData);
+			break;
+		case DEFENSE:
+			//shooterReposition(gameData);
+			break;
+		case DEFENSE2:
+			//shooterReposition(gameData);
+			break;
+		case MIDFIELDER:
+			//shooterReposition(gameData);
+			break;
+		case SHOOTER:
+			shooterReposition(gameData);
+			break;
+		case SHOOTER2:
+			secondShooterReposition(gameData);
+			break;
+		default: break;
 	}
 
 }
@@ -140,8 +143,7 @@ void Players::dissablePlayer(void)
 
 //TESTING
 
-
-void Players::shooterReposition(inGameData_t data)  //capaz esta plagada de errores de punteros...
+void Players::shooterReposition(inGameData_t &data)  //capaz esta plagada de errores de punteros...
 {
 	vector<Vector2> midPoints;
 	for (int bot1 = 0; bot1 < 6; bot1++)   //obtengo los puntos medios entre enemigos
@@ -187,22 +189,13 @@ void Players::shooterReposition(inGameData_t data)  //capaz esta plagada de erro
 
 	setPoint_t idealSetPoint; 
 	idealSetPoint.coord ={ idealMidpoint.x, idealMidpoint.y };
-	idealSetPoint.rotation = 0;
+	idealSetPoint.rotation = calculateRotation(idealSetPoint.coord, {data.ballPosition.x,data.ballPosition.z});
 	this->setSetpoint(idealSetPoint);
 }
 
 void Players::secondShooterReposition(inGameData_t& data)  //capaz esta plagada de errores de punteros...
 {
 	vector<Vector2> midPoints;
-	// vector<Vector3> nearGoalEnemies;
-	// for (int enemy = 0; enemy < 6; enemy++)
-	// {
-	// 	float distEnemyGoal = data.oppTeamPositions[enemy].x - data.oppGoal.x;  //solo enemigos "cerca" del arco contrario
-	// 	if (distEnemyGoal < 2.5 && distEnemyGoal > -2.5)
-	// 	{
-	// 		nearGoalEnemies.push_back(data.oppTeamPositions[enemy]);
-	// 	}
-	// }
 	for (auto bot1 : data.oppTeamPositions)   //obtengo los puntos medios entre enemigos
 	{
 		for (auto bot2 : data.oppTeamPositions)
@@ -212,7 +205,10 @@ void Players::secondShooterReposition(inGameData_t& data)  //capaz esta plagada 
 			{
 				Vector2 midPoint = proportionalPosition({ bot1.x, bot1.z },
 					{ bot2.x, bot2.z }, 0.5);
-				midPoints.push_back(midPoint);
+				if(MODULE((data.oppGoal.x - midPoint.x)) > 0.2)
+				{
+					midPoints.push_back(midPoint);
+				}
 			}
 		}
 		Vector2 firstCorner = { data.oppGoal.x, 3 }; //calculo con una esquina
@@ -227,7 +223,7 @@ void Players::secondShooterReposition(inGameData_t& data)  //capaz esta plagada 
 	Vector2 idealMidpoint = { 0,0 };
 	float minDistance = 9.0;
 
-	while (midPoints.empty())  //mira todos los puntos medios entre robots
+	while (!midPoints.empty())  //mira todos los puntos medios entre robots
 	{
 		Vector2 point = midPoints.back();
 		for (auto bot : data.oppTeamPositions)  //mira distancias entre enemigo y pnto medio
@@ -254,46 +250,36 @@ void Players::secondShooterReposition(inGameData_t& data)  //capaz esta plagada 
 		midPoints.pop_back();
 	}
 	setPoint_t idealSetPoint; 
-	cout << "2nd shooter: " << idealMidpoint.x << " , " << idealMidpoint.y << endl;
 	idealSetPoint.coord ={ idealMidpoint.x, idealMidpoint.y };
-	idealSetPoint.rotation = 0;
+	idealSetPoint.rotation = calculateRotation(idealSetPoint.coord, {data.ballPosition.x,data.ballPosition.z});
 	this->setSetpoint(idealSetPoint);
 }
 
+/**
+ * @brief 
+ * 
+ * @param gameData 
+ */
+void Players::save(inGameData_t &gameData)
+{
+	//float deltaX = position.x - gameData.ballPosition.x;
+	//float alpha = (gameData.myGoal.x < 0) ? (calculateRotation({ 0,0 },
+	//	 { gameData.ballVelocity.x, gameData.ballVelocity.z }) - 90) :
+	//	 (270 - calculateRotation({ 0,0 }, { gameData.ballVelocity.x,gameData.ballVelocity.z }));
 
-// /**
-//  * @brief
-//  *
-//  * @param objectivePlayer
-//  * @param gameData
-//  */
-// void Players::pass(Vector3 objectivePlayer, inGameData_t& gameData)
-// {
-// 	Vector2 ballPosition = { gameData.ballPosition.x, gameData.ballPosition.z };
-// 	Vector2 objectivePlayerPosition = { objectivePlayer.x, objectivePlayer.z };
+	float prop = (distanceOfCoords(gameData.myGoal, {gameData.ballPosition.x, gameData.ballPosition.z}) < 2) ? 0.5 : 0.2;
+	Vector2 destination = proportionalPosition(gameData.myGoal,
+		{ gameData.ballPosition.x, gameData.ballPosition.z }, prop );
+	//destination.y = gameData.ballPosition.z - (tan(alpha) * (deltaX));
+	Vector2 ballVel = {gameData.ballVelocity.x , gameData.ballVelocity.z};
+	if(MODULE(ballVel.x) > 0.1)
+	{
+		float shootingPower = gameData.myGoal.x / ballVel.x;
+		if(shootingPower > 0 && MODULE(ballVel.y * shootingPower) < 0.3)
+			destination.y = ballVel.y * shootingPower;
+	}
 
-// 	setPoint_t proxPlaceInCourt;
-// 	setPoint_t kickValue = { 100, 100, 100 };
-
-// 	// fijasrse si hay jugadores en el medio, devuelvo false o la tiro por arriba?
-// 	if (!checkForInterception(gameData.oppTeamPositions, objectivePlayerPosition))
-// 	{
-// 		proxPlaceInCourt = kickBallLogic(objectivePlayerPosition, ballPosition);
-		
-// 		// if ((proxPlaceInCourt.coord.x == kickValue.coord.x) &&
-// 		// 	(proxPlaceInCourt.coord.y == kickValue.coord.y) &&
-// 		// 	(proxPlaceInCourt.rotation == kickValue.rotation)) 		// comparacion de igualdad de setpoints
-// 		// {
-// 		// 	if (getKickerCharge() >= 160)
-// 		// 		// setKicker(to_string(player->robotID));
-// 		// 	// else
-// 		// 		// voltageKickerChipper(to_string(player->robotID)); 	// este orden por el pop_back del vector
-// 		// }
-// 		// else // mover hasta el setpoint indicado
-// 		// {
-// 		// 	// setpoint = 
-// 		// }
-// 	}
-// }
-
-
+	float alpha = calculateRotation({position.x, position.z}, {gameData.ballPosition.x, gameData.ballPosition.z});
+	cout << "GOALIE: " << destination.x << " , " << destination.y << endl;
+   	setSetpoint({ destination,(alpha - 180)});
+}

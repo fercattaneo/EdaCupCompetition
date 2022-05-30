@@ -47,7 +47,7 @@ public:
     Players();
     ~Players();
 
-    virtual void update(inGameData_t gameData);
+    void update(inGameData_t gameData);
     void start(int playerNumber);
     setPoint_t goToBall(Vector2 objectivePosition, Vector2 ballPosition, float proportional);
     setPoint_t kickBallLogic(Vector2 objectivePosition, Vector2 ballPosition);
@@ -63,8 +63,9 @@ private:
     //TESTING
     // void pass(Vector3 objectivePlayer, inGameData_t &gameData);
     
-    void shooterReposition(inGameData_t data);
+    void shooterReposition(inGameData_t &data);
     void secondShooterReposition (inGameData_t &data);
+    void save(inGameData_t &gameData);
 };
 
 #endif // PLAYERS_H
