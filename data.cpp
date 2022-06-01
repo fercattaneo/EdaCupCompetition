@@ -172,7 +172,7 @@ bool sameLine(Vector2 originPos, Vector2 finalPos, Vector2 mediumPos)
  * @param originPos 
  * @param finalPos 
  * @param point 
- * @return true 
+ * @return true if point is in the corridor of width displacement*2
  * @return false 
  */
 bool betweenTwoLines(Vector2 originPos, Vector2 finalPos, Vector2 point, float displacement)
@@ -183,12 +183,16 @@ bool betweenTwoLines(Vector2 originPos, Vector2 finalPos, Vector2 point, float d
 
 	float origin = originPos.y - pendiente * originPos.x;
 	float Xpoint = (point.y - origin) / pendiente; 
+	float Zpoint = pendiente * Xpoint + origin;
 
-	float pointLine1 = Xpoint - displacement;
-	float pointLine2 = Xpoint + displacement;  // tomo x de point y +- anchoDelPasillo / 2
+	float pointLine1 = Xpoint - displacement;		// izquierda del punto
+	float pointLine2 = Xpoint + displacement;  		// derecha del punto
+	float pointLine3 = Zpoint - displacement;		// abajo del punto
+	float pointLine4 = Zpoint + displacement;		// arriba del punto
 
 	// Calcular los puntos en la recta
-	if ((pointLine1 < point.x) && (pointLine2 > point.x))
+	if ((pointLine1 < point.x) && (pointLine2 > point.x)
+		&& (pointLine3 < point.x) && (pointLine4 > point.x))
 	{
 		return true;
 	}
@@ -202,5 +206,6 @@ float distanceOfCoords(Vector2 firstCoord, Vector2 secondCoord)
 	float deltaZ = firstCoord.y - secondCoord.y;
 	float square = (deltaX * deltaX) + (deltaZ * deltaZ);
 	float distance = sqrt(square);
+
 	return distance;
 }

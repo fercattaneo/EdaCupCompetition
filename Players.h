@@ -20,14 +20,17 @@
 
 using namespace std;
 
+#define LENGTH_OF_COURT_X 9.0f // meters
+#define LENGTH_OF_COURT_Z 6.0f
+
 typedef struct
 {
+    Vector2 myGoal;                     
+    Vector2 oppGoal;                    
     Vector3 ballPosition;
     Vector3 ballVelocity;
     vector<Vector3> teamPositions;
     vector<Vector3> oppTeamPositions;
-    Vector2 myGoal;                     
-    Vector2 oppGoal;                    
 } inGameData_t;
 
 // Role of each player
@@ -52,20 +55,28 @@ public:
     setPoint_t goToBall(Vector2 objectivePosition, Vector2 ballPosition, float proportional);
     setPoint_t kickBallLogic(Vector2 objectivePosition, Vector2 ballPosition);
     
-
     int fieldRol;
     void toEnablePlayer(void);
     void dissablePlayer(void);
 
 private:
     bool enablePlayer;
+    
+    // GOALIE
+    void save(inGameData_t &gameData);
 
+    // DEFENSE
+    void defendGoal(inGameData_t &data, float goalZpoint);
+    
+    // MIDFIELDER
+    void midfielderReposition(inGameData_t& data);
+    // SHOOTERS
+    void shooterReposition(inGameData_t &data);
+    void secondShooterReposition (inGameData_t &data);
+    
     //TESTING
     // void pass(Vector3 objectivePlayer, inGameData_t &gameData);
     
-    void shooterReposition(inGameData_t &data);
-    void secondShooterReposition (inGameData_t &data);
-    void save(inGameData_t &gameData);
 };
 
 #endif // PLAYERS_H

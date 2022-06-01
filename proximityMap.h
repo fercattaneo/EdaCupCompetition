@@ -25,7 +25,6 @@ typedef struct
 
 }BotInfo;
 
-
 struct sNode
 {
     bool beenVisited;                       

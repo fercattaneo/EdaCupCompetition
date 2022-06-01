@@ -233,14 +233,14 @@ string GameModel::getTeamID()
  * @param ballPosition
  * @param ballVelocity
  */
-coord_t GameModel::getProxPosBall2D(Vector3 ballPosition, Vector3 ballVelocity)
+Vector2 GameModel::getProxPosBall2D(Vector3 ballPosition, Vector3 ballVelocity)
 {
 	// calculo de tiro oblicuo, relacion en Y
 	//  Y = Yo + Vy * time + 1/2 * Ay * time^2
 	// hallar tiempo de caida para aproximar X,Z
 	//  time = (-Vy +- sqrt(Vy*Vy - 4*Yo*1/2*Ay))/(2*1/2*Ay)
 	// tomo el time positivo xq es el valido
-	coord_t proxPos;
+	Vector2 proxPos;
 	float discriminante = (ballVelocity.y * ballVelocity.y) - (2 * ballPosition.y * EARTH__GRAVITY);
 	if (discriminante >= 0)
 	{
@@ -250,13 +250,13 @@ coord_t GameModel::getProxPosBall2D(Vector3 ballPosition, Vector3 ballVelocity)
 			fallingTime = (-ballVelocity.y - discriminante) / (EARTH__GRAVITY);
 
 		proxPos.x = ballPosition.x + (ballVelocity.x * fallingTime);
-		proxPos.z = ballPosition.z + (ballVelocity.z * fallingTime);
+		proxPos.y = ballPosition.z + (ballVelocity.z * fallingTime);
 	}
 	else // raiz imaginaria
 	{
 		cout << "Invalid ball position algebra..." << endl;
 		proxPos.x = ballPosition.x + (ballVelocity.x * 0.1); // forced aproximation
-		proxPos.z = ballPosition.z + (ballVelocity.z * 0.1);
+		proxPos.y = ballPosition.z + (ballVelocity.z * 0.1);
 	}
 	return proxPos;
 }
@@ -273,10 +273,6 @@ void GameModel::updatePositions()
 		if (destination.coord.x != 20 && destination.coord.y != 20 && destination.rotation != 20)
 		{
 			setSetpoint(destination, teamRobot->robotID);
-			// MQTTMessage setpointMessage = { "robot" + teamID + "." + to_string(teamRobot->robotID) +
-			// 								   "/pid/setpoint/set",
-			// 							   getArrayFromSetPoint(destination) };
-			// messagesToSend.push_back(setpointMessage);
 		}
 	}
 }
@@ -417,14 +413,91 @@ bool GameModel::checkForInterception(vector<Vector3>& oppTeamPositions, Vector2 
 /**
  * @brief adds a setpoint from RobotID to messagesToSend
  *
- * @param setpoint position to set in the robot
+ * @param setpoint position to set in the robot 
  * @param robotID number of robot to change the setpoint
  */
 void GameModel::setSetpoint(setPoint_t setpoint, int robotID)
 {
 	Vector3 posInCourt = dataPassing.teamPositions[robotID];
-	setpoint.coord = proportionalPosition({ posInCourt.x, posInCourt.z }, setpoint.coord, 0.5);
+	float dist = distanceOfCoords({posInCourt.x, posInCourt.z}, setpoint.coord);
+	//tiene que ir de 1 a 0.5 en funcion de 0 a 10 ¿?
+	float propSetPoint;
+	if(dist < 1)
+		propSetPoint = 0.8;
+	else if(dist < 3)
+		propSetPoint = 0.6;
+	else 
+		propSetPoint = 0.5;
+	setpoint.coord = proportionalPosition({ posInCourt.x, posInCourt.z }, setpoint.coord, propSetPoint);
 	MQTTMessage setpointMessage = { "robot" + teamID + "." + to_string(robotID + 1) + "/pid/setpoint/set",
 								   getArrayFromSetPoint(setpoint) };
 	messagesToSend.push_back(setpointMessage);
+}
+
+
+//
+//		PARA DESPUES, CUANDO TENGAMOS "TODO ARMADO"
+// funcion 
+void GameModel::searchFreeBall()
+{
+	setPoint_t destination;
+	if(dataPassing.ballPosition.y > 0.01) //si la altura es mayor a ALGO analizo funcion de caida
+		destination.coord = getProxPosBall2D(dataPassing.ballPosition, dataPassing.ballVelocity);
+	else  //sino analizo por pases por el piso
+	{
+		float proxTime = 0.33; //calculo de la posicion en 0.33 segundos
+		Vector2 futurePosition;
+		futurePosition.x = dataPassing.ballPosition.x + (dataPassing.ballVelocity.x * proxTime);
+		futurePosition.y = dataPassing.ballPosition.z + (dataPassing.ballVelocity.z * proxTime);
+		destination.coord = futurePosition;
+	}
+	//con el punto objetivo miro a nuestro robot mas cercano y seteo que vaya a esa posicion 
+	float maxCloseness = 9.0;
+	int index;
+	for(auto ally : team)
+	{
+		Vector3 pos = ally->getPosition();
+		float closeness = distanceOfCoords({pos.x, pos.z},{destination.coord.x, destination.coord.y});
+		if(closeness < maxCloseness)
+		{
+			maxCloseness = closeness;
+			index = ally->robotID;
+		}
+	}
+	destination.rotation = calculateRotation ({destination.coord.x, destination.coord.y},
+		{dataPassing.ballPosition.x, dataPassing.ballPosition.z});
+	setSetpoint(destination, index);
+}
+
+void GameModel::analizePosession()
+{
+	posession = FREE_BALL;
+	for(auto ally : team)
+	{
+		Vector3 posOfAlly = ally->getPosition();
+		if(isCloseTo({posOfAlly.x, posOfAlly.z}, {dataPassing.ballPosition.x, dataPassing.ballPosition.z} , 0.15))
+		{
+			posession = MY_TEAM; //un aliado esta cerca
+			robotWithBall = ally->robotID;
+			break;
+		}
+	}
+	int nearEnemies = 0;
+	for (auto enemy : team)
+	{
+		Vector3 posOfEnemy = enemy->getPosition();
+		bool nearness = isCloseTo({posOfEnemy.x, posOfEnemy.z},
+			{dataPassing.ballPosition.x, dataPassing.ballPosition.z} , 0.15);
+		if(nearness && (posession == FREE_BALL))  //la tiene un enemigo
+		{
+			posession = OPP_TEAM;
+			break;
+		}
+		else if(nearness && (posession == MY_TEAM)) //esta en disputa
+			nearEnemies++;
+	}
+	if((posession != FREE_BALL) && nearEnemies == 1)
+		posession = DISPUTED_BALL;
+	else if((posession != FREE_BALL) && nearEnemies > 1)
+		posession = OPP_TEAM;
 }

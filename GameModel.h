@@ -19,9 +19,6 @@
 
 using namespace std;
 
-#define LENGTH_OF_COURT_X 9f // meters
-#define LENGTH_OF_COURT_Z 6f
-
 #define EARTH__GRAVITY 9.80665f
 
 enum GameState
@@ -40,6 +37,14 @@ enum GameState
     ADD_ROBOT,
     ENDED_GAME,
     GOAL
+};
+
+enum BALL_POSESSION
+{
+    MY_TEAM,
+    OPP_TEAM,
+    FREE_BALL,
+    DISPUTED_BALL
 };
 
 class GameModel : public MQTTListener
@@ -62,6 +67,8 @@ private:
 
     inGameData_t dataPassing;
     GameState gameState;
+    BALL_POSESSION posession;
+    int robotWithBall;
     string teamID;
     string oppTeamID;
 
@@ -80,8 +87,10 @@ private:
     void setChipper(string robotID);
     void setKicker(string robotID);
 
-    coord_t getProxPosBall2D(Vector3 ballPosition, Vector3 ballVelocity);
+    Vector2 getProxPosBall2D(Vector3 ballPosition, Vector3 ballVelocity);
     bool isBallStill(void);
+    void searchFreeBall();
+    void analizePosession();
 
     string getTeamID();
 };
