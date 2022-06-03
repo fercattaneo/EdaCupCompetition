@@ -347,6 +347,48 @@ void Players::defendGoal(inGameData_t& data, float goalZpoint)
 // TESTING //
 /////////////
 
+Vector2 Players::openZPlace (inGameData_t &data, Vector2 point0, Vector2 point1, Vector2 vertix)
+{
+	Vector2 dest;
+	dest.x = (1.5 / MODULE(data.oppGoal.x)) * data.ballPosition.x;
+	float rot0 = calculateRotation (vertix, point0);
+	float rot1 = calculateRotation (vertix, point1);
+	if(rot1 < rot0) //caso de la pelota a la derecha de los puntos
+	{
+		float swapper = rot0;
+		rot0 = rot1;
+		rot1 = swapper;
+	}
+	bool flag2 = false;
+	float deltaAngle = rot0 + 360 - rot1;
+	float increment = (deltaAngle /45); //45 muestreos independiente del angulo
+	float zVaration = MODULE(point0.y, point1.y) / 45;
+	for(int i = 0; (rot1 + (i * increment)) < (rot0 + 360) ; i++)
+	{
+		if(flag2)
+			break;
+		for(int j = 0; j<6 ; j++) //analize enemies
+		{
+			if(data.oppTeamPositions[j].x > data.myGoal.x && 
+				data.oppTeamPositions[j].x < data.ballPosition.x ||
+				data.oppTeamPositions[j].x < data.myGoal.x && 
+				data.oppTeamPositions[j].x > data.ballPosition.x)  //is between my goal and ball
+			{
+				float angle =  (i * increment) + rot1; //esto es en angulo -> pasar a Z
+				if(angle > 360)
+					angle -= 360;
+				float topZ = (point0.y > point1.y) ? point0.y : point1.y;
+				dest.y = i * zVaration + topZ;
+				if(!betweenTwoLines({data.ballPosition.x, data.ballPosition.z}, dest,
+					{data.oppTeamPositions[j].x, data.oppTeamPositions[j].z}, 0.1))
+					//cout << "libre como Nino Bravo: " << dest.y << endl;
+					return dest;
+			}
+		}
+	}
+	return { (point0.x),0 };
+}
+
 /**
  * @brief Calculates position of midfielder when attacking
  * 
@@ -354,112 +396,8 @@ void Players::defendGoal(inGameData_t& data, float goalZpoint)
  */
  void Players::midfielderReposition(inGameData_t& data)
 {
-	/*
-	float distance = LENGTH_OF_COURT_X;
-	int botToAnalyse = 3;
-
-	// Analizo para ver de que robot voy a recibir la bocha
-	for (int bot = 1; bot < 6; bot++)
-	{
-		if (bot != 3) //midfielder ID
-		{
-			float botDistance = 0;
-			botDistance = distanceOfCoords({ data.ballPosition.x, data.ballPosition.z },
-				{ data.teamPositions[bot].x,data.teamPositions[bot].y });
-
-			if (botDistance < distance)
-			{
-				distance = botDistance;
-				botToAnalyse = bot;
-			}
-		}
-	}
-
-	// Analizo posicion optima
-	float proportionalX = (1.5 / MODULE(data.oppGoal.x)) * data.ballPosition.x;
-	vector<float> minDistance(40, LENGTH_OF_COURT_X);
-	Vector2 possibleCoords;
-	Vector2 teamBot = { data.teamPositions[botToAnalyse].x,data.teamPositions[botToAnalyse].z };
-	
-	for (int corridor = 0; corridor < 40; corridor++)
-	{
-		distance = 0;
-		int flag = 0;
-		for (auto enemyBot : data.oppTeamPositions)
-		{
-			possibleCoords = { proportionalX, (-2.0f + (corridor) * 0.1f) };
-			distance = distanceOfCoords(possibleCoords, {enemyBot.x, enemyBot.z}); 
-			
-			if (betweenTwoLines(teamBot, possibleCoords, {enemyBot.x, enemyBot.z}, 0.25f))  // free corridor
-			{
-				cout << "Pase bloqueado..." << endl;
-				minDistance[corridor] = LENGTH_OF_COURT_X;
-				flag = 1;
-			}
-
-			if (distance < minDistance[corridor] && !flag)
-			{
-				minDistance[corridor] = distance;
-			}
-		}
-	}
-
-	int corridor = 0;
-	float maxDistance = minDistance[0];
-
-	for ( int i = 0; i < 40; i++)
-	{
-		if (minDistance[i] > maxDistance && minDistance[i] != LENGTH_OF_COURT_X)
-		{
-			corridor = i;
-			maxDistance = minDistance[i];
-		}
-	}
-	if (MODULE(minDistance[20] - minDistance[corridor]) < 0.5f ) // go to the middle if there is not much advantage
-		corridor = 20;
-
-	possibleCoords = { proportionalX, -2.0f + (corridor) * 0.1f };
-	float rotation = calculateRotation({data.teamPositions[botToAnalyse].x,
-										data.teamPositions[botToAnalyse].z }, possibleCoords);
-	setSetpoint({possibleCoords, rotation});
-	*/
-
 	///// ANGULAR VERSION ~ TESTING
-	Vector2 dest;
-	dest.x = (1.5 / MODULE(data.oppGoal.x)) * data.ballPosition.x;
-	float rot0 = calculateRotation ({data.ballPosition.x, data.ballPosition.z}, {0,-3.0});
-	float rot1 = calculateRotation ({data.ballPosition.x, data.ballPosition.z}, {0,3.0});
-	rot0 = (rot0 < 0) ? (rot0 + 360) : rot0;
-	rot1 = (rot1 < 0) ? (rot1 + 360) : rot1;
-	if(rot1 < rot0)
-	{
-		float swapper = rot0;
-		rot0 = rot1;
-		rot1 = swapper;
-	}
-	bool flag2 = false;
-	for(int i = 0; ((float)i + rot0) < rot1 ; i++, i++)
-	{
-		if(flag2)
-			break;
-		for(int j = 0; j<6 ; j++)
-		{
-			if(data.oppTeamPositions[j].x > data.myGoal.x && 
-				data.oppTeamPositions[j].x < data.ballPosition.x ||
-				data.oppTeamPositions[j].x < data.myGoal.x && 
-				data.oppTeamPositions[j].x > data.ballPosition.x)  //is between my goal and ball
-			{
-				dest.y =  (float)i + rot0;
-				if(!betweenTwoLines({data.ballPosition.x, data.ballPosition.z}, dest,
-					{data.oppTeamPositions[j].x, data.oppTeamPositions[j].z}, 0.1))
-				{
-					cout << "libre como Sandro: " << dest.y << endl;
-					flag2 = true;
-					break;
-				}
-			}
-		}
-	}
+	Vector2 dest = openZPlace(data, {0,-2.7},{0,2.7},{data.ballPosition.x, data.ballPosition.z});
 	float rotation = calculateRotation(dest, {data.ballPosition.x, data.ballPosition.z});
 	setSetpoint({dest, rotation});
 }

@@ -77,6 +77,8 @@ private:
     // SHOOTERS
     void shooterReposition(inGameData_t &data);
     void secondShooterReposition (inGameData_t &data);
+
+    Vector2 openZPlace (inGameData_t &data, Vector2 point0, Vector2 point1, Vector2 vertix);
     
 };
 
