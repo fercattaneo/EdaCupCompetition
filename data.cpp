@@ -172,29 +172,82 @@ bool sameLine(Vector2 originPos, Vector2 finalPos, Vector2 mediumPos)
  * @param originPos 
  * @param finalPos 
  * @param point 
- * @return true if point is in the corridor of width displacement*2
+ *
+ * @return true if point is in the corridor
  * @return false 
+	//   X1         //NO BORREN ESTO Q ESTA RE LINDO
+	//   | \  P
+	//   |  \/ (90° ~ recta normal)
+	//   |   \
+	//   |    X2
+	// recta entre X1 Y X2   (M = (y2-y1) / (x2-x1) )
+	// normal a la recta q cruze con P  (N = -1/M)   (N (xP-xa) + ya = yP )
+	// interseccion de rectas y punto P  (M (x2-xa) + ya = y2 )
+	//  N (xP-xa) -yP = M (x2-xa) -y2 --->  xa = (Mx2+xp/M)-y2-yp)/(M+1/M) ---> ya = y2 + M(x2-xa)
+	// si la distancia es menor a displacement esta adentro
  */
 bool betweenTwoLines(Vector2 originPos, Vector2 finalPos, Vector2 point, float displacement)
 {
-	float deltaX = finalPos.x - originPos.x;
-	float deltaY = finalPos.y - originPos.y;
-	float pendiente = deltaY / deltaX;
-
-	float origin = originPos.y - pendiente * originPos.x;
-	float Xpoint = (point.y - origin) / pendiente; 
-	float Zpoint = pendiente * Xpoint + origin;
-
-	float pointLine1 = Xpoint - displacement;		// izquierda del punto
-	float pointLine2 = Xpoint + displacement;  		// derecha del punto
-	float pointLine3 = Zpoint - displacement;		// abajo del punto
-	float pointLine4 = Zpoint + displacement;		// arriba del punto
-
-	// Calcular los puntos en la recta
-	if ((pointLine1 < point.x) && (pointLine2 > point.x)
-		&& (pointLine3 < point.x) && (pointLine4 > point.x))
+	if(originPos.x < finalPos.x)
 	{
-		return true;
+		if(point.x > originPos.x && point.x < finalPos.x)  // dentro de deltaX
+		{
+			if(originPos.y < finalPos.y)
+			{
+				if(point.y < originPos.y || point.y > finalPos.y) 
+					return false;
+			}
+			else
+			{
+				if(point.y > originPos.y || point.y < finalPos.y) 
+					return false;
+			}
+		}
+		else
+			return false;
+	}
+	else
+	{
+		if(point.x < originPos.x && point.x > finalPos.x)  // dentro de deltaX
+		{
+			if(originPos.y < finalPos.y)
+			{
+				if(point.y < originPos.y || point.y > finalPos.y) 
+					return false;
+			}
+			else
+			{
+				if(point.y > originPos.y || point.y < finalPos.y) 
+					return false;
+			}
+		}
+		else
+			return false;
+	}
+
+	float deltaY = (finalPos.y - originPos.y);
+	float deltaX = (finalPos.x - originPos.x);
+	
+	if(MODULE(deltaY) < 0.05) //aprox a pendiente 0
+	{
+		if(MODULE(point.y - originPos.y) < MODULE(displacement))
+			return true;
+	}
+	else if (MODULE(deltaX) < 0.05)  //aprox a pendiente 0
+	{
+		if(MODULE(point.x - originPos.x) < MODULE(displacement))
+			return true;
+	}
+	else
+	{
+		float M = (deltaY / deltaX); //pendinete de recta entre origin y final
+		Vector2 intersection;  // entre recta entre origin y final, con la normal q pasa por point
+		intersection.x = ( ((M * finalPos.x) + (point.x / M) - finalPos.y - point.y) / (M + (1/M)));
+		intersection.y = finalPos.y - (M * (finalPos.x - intersection.x));
+		float distPointInter = distanceOfCoords(point, intersection);
+		
+		if( distPointInter <= displacement)
+			return true;
 	}
 
 	return false;

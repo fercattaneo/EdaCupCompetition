@@ -75,24 +75,29 @@ private:
     vector<Players *> team;
 
     void update(inGameData_t &dataPassing);
+    void updateFuturePos(inGameData_t& dataPassing);
     void updatePositions();
     void assignMessagePayload(string topic, vector<char> &payload);
 
     void setSetpoint(setPoint_t setpoint, int robotID);
 
-    void shoot(Players *player, Vector2 objectivePosition);
-    bool checkForInterception(vector<Vector3> &oppTeam, Vector2 objective, Vector2 teamPosition);
     void voltageKickerChipper(string robotID);
-    void setDribbler(string robotID);
+    void setDribbler(string robotID, bool onOff);
     void setChipper(string robotID);
-    void setKicker(string robotID);
+    void setKicker(string robotID, float power);
 
     Vector2 getProxPosBall2D(Vector3 ballPosition, Vector3 ballVelocity);
     bool isBallStill(void);
     void searchFreeBall();
     void analizePosession();
-
+    void checkForCollision(Vector2 actualPos, setPoint_t &setpoint);
     string getTeamID();
+
+    /*TESTING*/
+    void shoot(Players *player, Vector2 objectivePosition);
+    bool checkForInterception(vector<Vector3> &oppTeam, Vector2 objective, Vector2 teamPosition);
+    void dribbleTo(Players &player);
+
 };
 
 #endif //_GAMEMODEL_H

@@ -26,11 +26,13 @@ using namespace std;
 typedef struct
 {
     Vector2 myGoal;                     
-    Vector2 oppGoal;                    
+    Vector2 oppGoal;               
     Vector3 ballPosition;
     Vector3 ballVelocity;
     vector<Vector3> teamPositions;
     vector<Vector3> oppTeamPositions;
+    vector<Vector3> oppTeamSpeed;
+    vector<Vector3> oppTeamFuturePos;
 } inGameData_t;
 
 // Role of each player
@@ -70,12 +72,11 @@ private:
     
     // MIDFIELDER
     void midfielderReposition(inGameData_t& data);
+    void defensiveMidfielder (inGameData_t &data);
+
     // SHOOTERS
     void shooterReposition(inGameData_t &data);
     void secondShooterReposition (inGameData_t &data);
-    
-    //TESTING
-    // void pass(Vector3 objectivePlayer, inGameData_t &gameData);
     
 };
 

@@ -16,6 +16,8 @@
 #include <cmath>
 #include <assert.h>
 
+#define MODULE(x) (((x) > 0)?(x):(-(x)))
+
 std::vector<char> getDataFromFloat(float data);
 std::vector<char> getArrayFromSetPoint(setPoint_t setpoint);
 float getFloat(vector<char> vec);
