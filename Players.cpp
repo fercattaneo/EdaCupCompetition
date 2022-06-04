@@ -180,7 +180,7 @@ void Players::shooterReposition(inGameData_t& data)  //capaz esta plagada de err
 
 	setPoint_t idealSetPoint;
 	idealSetPoint.coord = { idealMidpoint.x, idealMidpoint.y };
-	idealSetPoint.rotation = calculateRotation(idealSetPoint.coord, { data.ballPosition.x,data.ballPosition.z });
+	idealSetPoint.rotation = calculateRotation({ data.ballPosition.x,data.ballPosition.z }, idealSetPoint.coord);
 	this->setSetpoint(idealSetPoint);
 }
 
@@ -247,7 +247,7 @@ void Players::secondShooterReposition(inGameData_t& data)  //capaz esta plagada 
 	}
 	setPoint_t idealSetPoint;
 	idealSetPoint.coord = { idealMidpoint.x, idealMidpoint.y };
-	idealSetPoint.rotation = calculateRotation(idealSetPoint.coord, { data.ballPosition.x,data.ballPosition.z });
+	idealSetPoint.rotation = calculateRotation({ data.ballPosition.x,data.ballPosition.z }, idealSetPoint.coord);
 	this->setSetpoint(idealSetPoint);
 }
 
@@ -337,8 +337,8 @@ void Players::defendGoal(inGameData_t& data, float goalZpoint)
 			{ data.ballPosition.x, data.ballPosition.z }, 1);
 		//TODO: set dribbler
 	}
-	destination.rotation = calculateRotation({ position.x, position.z },
-		{ data.ballPosition.x, data.ballPosition.z });
+	destination.rotation = calculateRotation({ data.ballPosition.x, data.ballPosition.z },
+		{ position.x, position.z });
 	setSetpoint(destination);
 }
 
@@ -347,7 +347,7 @@ void Players::defendGoal(inGameData_t& data, float goalZpoint)
 // TESTING //
 /////////////
 
-Vector2 Players::openZPlace(inGameData_t& data, Vector2 point0, Vector2 point1, Vector2 vertix)
+Vector2 Players::openZPlace(float dist, inGameData_t& data, Vector2 point0, Vector2 point1, Vector2 vertix)
 {
 	Vector2 dest;
 	dest.x = (1.5 / MODULE(data.oppGoal.x)) * data.ballPosition.x;
@@ -360,7 +360,11 @@ Vector2 Players::openZPlace(inGameData_t& data, Vector2 point0, Vector2 point1, 
 			if ((data.oppTeamPositions[j].x > data.myGoal.x &&
 				data.oppTeamPositions[j].x < data.ballPosition.x) ||
 				(data.oppTeamPositions[j].x < data.myGoal.x &&
-				data.oppTeamPositions[j].x > data.ballPosition.x))  //is between my goal and ball
+				data.oppTeamPositions[j].x > data.ballPosition.x) ||
+				(data.teamPositions[j].x > data.myGoal.x &&
+				data.teamPositions[j].x < data.ballPosition.x) ||
+				(data.teamPositions[j].x < data.myGoal.x &&
+				data.teamPositions[j].x > data.ballPosition.x))  //is a robot between my goal and ball
 			{
 				if (i % 2 == 0) // analiza en z > 0
 					dest.y = ((int)(i / 2)) * zVaration;
@@ -368,7 +372,7 @@ Vector2 Players::openZPlace(inGameData_t& data, Vector2 point0, Vector2 point1, 
 					dest.y = ((int)(-i / 2)) * zVaration;
 
 				if (!betweenTwoLines({ data.ballPosition.x, data.ballPosition.z }, dest,
-					{ data.oppTeamPositions[j].x, data.oppTeamPositions[j].z }, 0.1))
+					{ data.oppTeamPositions[j].x, data.oppTeamPositions[j].z }, dist))
 				{
 					return dest;
 				}
@@ -386,8 +390,8 @@ Vector2 Players::openZPlace(inGameData_t& data, Vector2 point0, Vector2 point1, 
 void Players::midfielderReposition(inGameData_t& data)
 {
 	///// ANGULAR VERSION ~ TESTING
-	Vector2 dest = openZPlace(data, { 0,-2.7 }, { 0,2.7 }, { data.ballPosition.x, data.ballPosition.z });
-	float rotation = calculateRotation(dest, { data.ballPosition.x, data.ballPosition.z });
+	Vector2 dest = openZPlace(0.1, data, { 0,-2.7 }, { 0,2.7 }, { data.ballPosition.x, data.ballPosition.z });
+	float rotation = calculateRotation({ data.ballPosition.x, data.ballPosition.z }, dest);
 	setSetpoint({ dest, rotation });
 }
 

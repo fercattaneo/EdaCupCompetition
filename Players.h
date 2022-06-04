@@ -30,6 +30,7 @@ typedef struct
     Vector3 ballPosition;
     Vector3 ballVelocity;
     vector<Vector3> teamPositions;
+    vector<Vector3> teamFuturePositions;
     vector<Vector3> oppTeamPositions;
     vector<Vector3> oppTeamSpeed;
     vector<Vector3> oppTeamFuturePos;
@@ -56,6 +57,7 @@ public:
     void start(int playerNumber);
     setPoint_t goToBall(Vector2 objectivePosition, Vector2 ballPosition, float proportional);
     setPoint_t kickBallLogic(Vector2 objectivePosition, Vector2 ballPosition);
+    Vector2 openZPlace (float dist, inGameData_t &data, Vector2 point0, Vector2 point1, Vector2 vertix);
     
     int fieldRol;
     void toEnablePlayer(void);
@@ -78,7 +80,6 @@ private:
     void shooterReposition(inGameData_t &data);
     void secondShooterReposition (inGameData_t &data);
 
-    Vector2 openZPlace (inGameData_t &data, Vector2 point0, Vector2 point1, Vector2 vertix);
     
 };
 

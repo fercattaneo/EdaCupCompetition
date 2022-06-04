@@ -89,12 +89,13 @@ private:
     Vector2 getProxPosBall2D(Vector3 ballPosition, Vector3 ballVelocity);
     bool isBallStill(void);
     void searchFreeBall();
-    void analizePosession();
+    void analyzePosession();
     void checkForCollision(Vector2 actualPos, setPoint_t &setpoint);
     string getTeamID();
 
     /*TESTING*/
-    int analizePass(Players &player);
+    int analyzePass(Players &player);
+    Vector2 analyzeShoot(Players &player);
     bool checkForInterception(vector<Vector3> &oppTeam, Vector2 objective, Vector2 teamPosition); 
     void dribbleTo(Players &player);
     bool isBallInCourt();
