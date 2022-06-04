@@ -26,7 +26,6 @@ enum GameState
     START,
     PRE_KICKOFF,
     KICKOFF,
-    IN_GAME,
     PRE_FREEKICK,
     FREEKICK,
     PRE_PENALTY,
@@ -73,7 +72,7 @@ private:
     string oppTeamID;
 
     vector<Players *> team;
-
+    void updateGameConditions(inGameData_t& dataPassing);
     void update(inGameData_t &dataPassing);
     void updateFuturePos(inGameData_t& dataPassing);
     void updatePositions();
@@ -86,6 +85,7 @@ private:
     void setChipper(string robotID);
     void setKicker(string robotID, float power);
 
+    void shoot(Players *player, Vector2 objectivePosition);
     Vector2 getProxPosBall2D(Vector3 ballPosition, Vector3 ballVelocity);
     bool isBallStill(void);
     void searchFreeBall();
@@ -94,9 +94,11 @@ private:
     string getTeamID();
 
     /*TESTING*/
-    void shoot(Players *player, Vector2 objectivePosition);
-    bool checkForInterception(vector<Vector3> &oppTeam, Vector2 objective, Vector2 teamPosition);
+    int analizePass(Players &player);
+    bool checkForInterception(vector<Vector3> &oppTeam, Vector2 objective, Vector2 teamPosition); 
     void dribbleTo(Players &player);
+    bool isBallInCourt();
+    void initialPositions();
 
 };
 

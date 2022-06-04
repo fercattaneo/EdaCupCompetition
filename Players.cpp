@@ -103,7 +103,7 @@ setPoint_t Players::kickBallLogic(Vector2 objectivePosition, Vector2 ballPositio
 	{
 		if (isCloseTo({ position.x, position.z }, ballPosition, 0.095f))
 		{
-			if((this->speed.x / objectivePosition.x) < 0) //esta en la direccion opuesta al arco
+			if ((this->speed.x / objectivePosition.x) < 0) //esta en la direccion opuesta al arco
 				return { 50, 50, 50 }; //dribbler y girar
 			else
 				return { 100, 100, 100 }; //disparar
@@ -136,8 +136,8 @@ void Players::dissablePlayer(void)
 
 /**
  * @brief calculates position of first shooter
- * 
- * @param data 
+ *
+ * @param data
  */
 void Players::shooterReposition(inGameData_t& data)  //capaz esta plagada de errores de punteros...
 {
@@ -186,8 +186,8 @@ void Players::shooterReposition(inGameData_t& data)  //capaz esta plagada de err
 
 /**
  * @brief calculates position of second shooter
- * 
- * @param data 
+ *
+ * @param data
  */
 void Players::secondShooterReposition(inGameData_t& data)  //capaz esta plagada de errores de punteros...
 {
@@ -347,42 +347,31 @@ void Players::defendGoal(inGameData_t& data, float goalZpoint)
 // TESTING //
 /////////////
 
-Vector2 Players::openZPlace (inGameData_t &data, Vector2 point0, Vector2 point1, Vector2 vertix)
+Vector2 Players::openZPlace(inGameData_t& data, Vector2 point0, Vector2 point1, Vector2 vertix)
 {
 	Vector2 dest;
 	dest.x = (1.5 / MODULE(data.oppGoal.x)) * data.ballPosition.x;
-	float rot0 = calculateRotation (vertix, point0);
-	float rot1 = calculateRotation (vertix, point1);
-	if(rot1 < rot0) //caso de la pelota a la derecha de los puntos
-	{
-		float swapper = rot0;
-		rot0 = rot1;
-		rot1 = swapper;
-	}
-	bool flag2 = false;
-	float deltaAngle = rot0 + 360 - rot1;
-	float increment = (deltaAngle /45); //45 muestreos independiente del angulo
 	float zVaration = MODULE(point0.y, point1.y) / 45;
-	for(int i = 0; (rot1 + (i * increment)) < (rot0 + 360) ; i++)
+
+	for (int i = 0; i < 45; i++)
 	{
-		if(flag2)
-			break;
-		for(int j = 0; j<6 ; j++) //analize enemies
+		for (int j = 0; j < 6; j++) //analize enemies
 		{
-			if(data.oppTeamPositions[j].x > data.myGoal.x && 
-				data.oppTeamPositions[j].x < data.ballPosition.x ||
-				data.oppTeamPositions[j].x < data.myGoal.x && 
-				data.oppTeamPositions[j].x > data.ballPosition.x)  //is between my goal and ball
+			if ((data.oppTeamPositions[j].x > data.myGoal.x &&
+				data.oppTeamPositions[j].x < data.ballPosition.x) ||
+				(data.oppTeamPositions[j].x < data.myGoal.x &&
+				data.oppTeamPositions[j].x > data.ballPosition.x))  //is between my goal and ball
 			{
-				float angle =  (i * increment) + rot1; //esto es en angulo -> pasar a Z
-				if(angle > 360)
-					angle -= 360;
-				float topZ = (point0.y > point1.y) ? point0.y : point1.y;
-				dest.y = i * zVaration + topZ;
-				if(!betweenTwoLines({data.ballPosition.x, data.ballPosition.z}, dest,
-					{data.oppTeamPositions[j].x, data.oppTeamPositions[j].z}, 0.1))
-					//cout << "libre como Nino Bravo: " << dest.y << endl;
+				if (i % 2 == 0) // analiza en z > 0
+					dest.y = ((int)(i / 2)) * zVaration;
+				else // analiza en z < 0
+					dest.y = ((int)(-i / 2)) * zVaration;
+
+				if (!betweenTwoLines({ data.ballPosition.x, data.ballPosition.z }, dest,
+					{ data.oppTeamPositions[j].x, data.oppTeamPositions[j].z }, 0.1))
+				{
 					return dest;
+				}
 			}
 		}
 	}
@@ -391,56 +380,56 @@ Vector2 Players::openZPlace (inGameData_t &data, Vector2 point0, Vector2 point1,
 
 /**
  * @brief Calculates position of midfielder when attacking
- * 
- * @param data 
+ *
+ * @param data
  */
- void Players::midfielderReposition(inGameData_t& data)
+void Players::midfielderReposition(inGameData_t& data)
 {
 	///// ANGULAR VERSION ~ TESTING
-	Vector2 dest = openZPlace(data, {0,-2.7},{0,2.7},{data.ballPosition.x, data.ballPosition.z});
-	float rotation = calculateRotation(dest, {data.ballPosition.x, data.ballPosition.z});
-	setSetpoint({dest, rotation});
+	Vector2 dest = openZPlace(data, { 0,-2.7 }, { 0,2.7 }, { data.ballPosition.x, data.ballPosition.z });
+	float rotation = calculateRotation(dest, { data.ballPosition.x, data.ballPosition.z });
+	setSetpoint({ dest, rotation });
 }
 
 /**
  * @brief Calculates position of midfielder when defending
- * 
- * @param data 
+ *
+ * @param data
  */
-void Players::defensiveMidfielder (inGameData_t &data)
+void Players::defensiveMidfielder(inGameData_t& data)
 {
 	// hallar el que este mas "solo" de los 3 de mas arriba e interceptar el pase
 	int indexForOpenEnemy;
 	float maxDist = 0;
-	for(int i = 0; i<6 ; i++) // recorro enemigos en nuestra mitad de cancha
+	for (int i = 0; i < 6; i++) // recorro enemigos en nuestra mitad de cancha
 	{
-		if(MODULE(data.myGoal.x - data.oppTeamPositions[i].x) < 4.5)
+		if (MODULE(data.myGoal.x - data.oppTeamPositions[i].x) < 4.5)
 		{
 			float minDist = 9.0;
-			for(int j = 0; j<6 ; j++) //recorro aliados
+			for (int j = 0; j < 6; j++) //recorro aliados
 			{
-				if(j!=3 && MODULE(data.teamPositions[j].x - data.oppTeamPositions[i].x) < 4)
+				if (j != 3 && MODULE(data.teamPositions[j].x - data.oppTeamPositions[i].x) < 4)
 				{
-					float dist = distanceOfCoords({data.teamPositions[j].x, data.teamPositions[j].z}
-						, {data.oppTeamPositions[i].x, data.oppTeamPositions[i].z});
-					if(dist < minDist)
+					float dist = distanceOfCoords({ data.teamPositions[j].x, data.teamPositions[j].z }
+					, { data.oppTeamPositions[i].x, data.oppTeamPositions[i].z });
+					if (dist < minDist)
 					{
 						minDist = dist;
 					}
 				}
 			}
-			if(minDist > maxDist)
+			if (minDist > maxDist)
 			{
 				maxDist = minDist;
 				indexForOpenEnemy = i;
 			}
 		}
 	}
-	Vector2 point = proportionalPosition({data.oppTeamPositions[indexForOpenEnemy].x, 
-										data.oppTeamPositions[indexForOpenEnemy].z},
-										{data.ballPosition.x, data.ballPosition.z}, 0.2);
-	float rot = calculateRotation({data.oppTeamPositions[indexForOpenEnemy].x, 
-								data.oppTeamPositions[indexForOpenEnemy].z},
-								{data.ballPosition.x, data.ballPosition.z});
-	setSetpoint ({point, rot});
+	Vector2 point = proportionalPosition({ data.oppTeamPositions[indexForOpenEnemy].x,
+										data.oppTeamPositions[indexForOpenEnemy].z },
+		{ data.ballPosition.x, data.ballPosition.z }, 0.2);
+	float rot = calculateRotation({ data.oppTeamPositions[indexForOpenEnemy].x,
+								data.oppTeamPositions[indexForOpenEnemy].z },
+		{ data.ballPosition.x, data.ballPosition.z });
+	setSetpoint({ point, rot });
 }

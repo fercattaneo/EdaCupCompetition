@@ -7,3 +7,5 @@ TODO:
 - función del midfielder cuando defiende ~
 - patear penales 
 - cuando busca la pelota, que vaya mirandola, agarre el dribbler y luego gire hacia donde quiere ir ~
+- corregir orientacion de las rotaaciones (cambiar coordenadas q se mandan al reves)
+- ver q onda lo de searchfreeball

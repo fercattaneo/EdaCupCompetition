@@ -190,16 +190,16 @@ bool betweenTwoLines(Vector2 originPos, Vector2 finalPos, Vector2 point, float d
 {
 	if(originPos.x < finalPos.x)
 	{
-		if(point.x > originPos.x && point.x < finalPos.x)  // dentro de deltaX
+		if((point.x) > originPos.x && (point.x) < finalPos.x)  // dentro de deltaX
 		{
 			if(originPos.y < finalPos.y)
 			{
-				if(point.y < originPos.y || point.y > finalPos.y) 
+				if((point.y) < originPos.y || (point.y) > finalPos.y) 
 					return false;
 			}
 			else
 			{
-				if(point.y > originPos.y || point.y < finalPos.y) 
+				if((point.y) > originPos.y || (point.y) < finalPos.y) 
 					return false;
 			}
 		}
@@ -208,16 +208,16 @@ bool betweenTwoLines(Vector2 originPos, Vector2 finalPos, Vector2 point, float d
 	}
 	else
 	{
-		if(point.x < originPos.x && point.x > finalPos.x)  // dentro de deltaX
+		if((point.x) < originPos.x && (point.x) > finalPos.x)  // dentro de deltaX
 		{
 			if(originPos.y < finalPos.y)
 			{
-				if(point.y < originPos.y || point.y > finalPos.y) 
+				if((point.y) < originPos.y || (point.y) > finalPos.y) 
 					return false;
 			}
 			else
 			{
-				if(point.y > originPos.y || point.y < finalPos.y) 
+				if((point.y) > originPos.y || (point.y) < finalPos.y)
 					return false;
 			}
 		}
