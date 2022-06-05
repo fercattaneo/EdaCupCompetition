@@ -79,9 +79,9 @@ setPoint_t Robot::getSetPoint()
 /**
  * @brief: enables robot for playing
  */
-void Robot::toEnablePlayer(void)
+void Robot::enablePlayer(void)
 {
-    enablePlayer = true;
+    inField = true;
 }
 
 /**
@@ -89,5 +89,5 @@ void Robot::toEnablePlayer(void)
  */
 void Robot::dissablePlayer(void)
 {
-    enablePlayer = false;
+    inField = false;
 }

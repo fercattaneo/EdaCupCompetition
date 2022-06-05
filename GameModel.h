@@ -71,7 +71,7 @@ private:
     int robotWithBall;
     string teamID;
     string oppTeamID;
-    int msjteam;
+    char msjteam;
 
     vector<Players *> team;
     void updateGameConditions(inGameData_t& dataPassing);
@@ -101,12 +101,14 @@ private:
     void initialPositions();
     void freekickPositions();
     void penaltyPositions();
+    void kickonce(Players &player);
+    
 
     /*TESTING*/
     bool checkForInterception(vector<Vector3> &oppTeam, Vector2 objective, Vector2 teamPosition); 
     void dribbleTo(Players &player);
     bool checkPlayingBall();
-
+    void pausePositions();
 };
 
 #endif //_GAMEMODEL_H

@@ -25,6 +25,7 @@ using namespace std;
 
 typedef struct
 {
+    int availableRobots;
     Vector2 myGoal;                     
     Vector2 oppGoal;               
     Vector3 ballPosition;

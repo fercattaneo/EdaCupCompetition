@@ -79,33 +79,50 @@ Vector2 proportionalPosition(Vector2 originPos, Vector2 finalPos, float proporti
  *
  * @return: angle in eulerian degrees
  */
-float calculateRotation(Vector2 originPos, Vector2 finalPos)
+float calculateRotation(Vector2 originPos, Vector2 rotateHere)
 {
-	float deltaX = finalPos.x - originPos.x;
-	float deltaZ = finalPos.y - originPos.y;
+	// float deltaX = finalPos.x - originPos.x;
+	// float deltaZ = finalPos.y - originPos.y;
 
-	if (deltaX == 0 && deltaZ == 0)
-	{
-		// cout << "Same Position delivered" << endl;
+	float deltaX = rotateHere.x - originPos.x;
+	float deltaZ = rotateHere.y - originPos.y;
+
+	/*if (deltaX == 0 && deltaZ == 0)
 		return 180;
-	}
 	if (deltaZ == 0)
-	{
-		// cout << "Invalid Angle, aprox to -90°" << endl;
 		return 270;
-	}
 	if (deltaX == 0)
-	{
-		// cout << "Invalid Angle, aprox to 180°" << endl;
 		return 180;
-	}
 
-	float angle = std::atan(deltaX / deltaZ);
-	if (deltaZ > 0)
-	{
-		angle -= PI; // radians degrees
-	}
+	float angle = std::atan(deltaX / deltaZ); 
 	angle *= (180 / PI); // grados sexagecimal degrees
+	//angle -= 
+	// angle += (angle < 0) ? 360 : 0; //absolute value
+
+	
+	//cout << "Rotation: " << angle << endl;
+	
+	if (deltaZ > 0 && deltaX > 0) // 0 - 90
+		angle -= (angle > 90) ? 90 : 0;
+	else if (deltaZ > 0 && deltaX < 0)
+		angle -= (angle > 180) ? 90 : 0;
+	else if (deltaZ < 0 && deltaX < 0)
+		angle -= (angle > 270) ? 90 : 0;
+	else
+		angle = 270 - angle;*/
+	float angle = std::atan(MODULE(deltaZ) / MODULE(deltaX)); 
+	angle *= (180 / PI); // grados sexagecimal degrees
+	if(deltaZ == 0)
+		angle = (deltaX > 0) ? 90 : 270;
+	else if(deltaX == 0)
+		angle = (deltaZ > 0) ? 0 : 180;
+	else
+	{
+		if(deltaX > 0)
+			angle = 90 + ((deltaZ > 0) ? (- angle) : angle);
+		else
+			angle = 270 - ((deltaZ > 0) ? (- angle) : angle);
+	}
 
 	return angle;
 }
@@ -188,18 +205,26 @@ bool sameLine(Vector2 originPos, Vector2 finalPos, Vector2 mediumPos)
  */
 bool betweenTwoLines(Vector2 originPos, Vector2 finalPos, Vector2 point, float displacement)
 {
-	if(originPos.x < finalPos.x)
+	/*float Z = calculateRotation(originPos, point) - calculateRotation(originPos, finalPos);
+	Z += (Z < 0) ? 360 : 0; // eulerian angle
+	Z = (Z / 360) * 2 * PI; //radians
+	float dist = distanceOfCoords(originPos, point) * MODULE(std::sin(Z));
+//	cout << "DIST = " << dist << endl;
+	if(dist <= displacement)
+		return true;
+	return false;
+	*/ if(originPos.x < finalPos.x)
 	{
 		if((point.x) > originPos.x && (point.x) < finalPos.x)  // dentro de deltaX
 		{
 			if(originPos.y < finalPos.y)
 			{
-				if((point.y) < originPos.y || (point.y) > finalPos.y) 
+				if((point.y) < originPos.y || (point.y) > finalPos.y)
 					return false;
 			}
 			else
 			{
-				if((point.y) > originPos.y || (point.y) < finalPos.y) 
+				if((point.y) > originPos.y || (point.y) < finalPos.y)
 					return false;
 			}
 		}
@@ -212,7 +237,7 @@ bool betweenTwoLines(Vector2 originPos, Vector2 finalPos, Vector2 point, float d
 		{
 			if(originPos.y < finalPos.y)
 			{
-				if((point.y) < originPos.y || (point.y) > finalPos.y) 
+				if((point.y) < originPos.y || (point.y) > finalPos.y)
 					return false;
 			}
 			else
@@ -227,7 +252,7 @@ bool betweenTwoLines(Vector2 originPos, Vector2 finalPos, Vector2 point, float d
 
 	float deltaY = (finalPos.y - originPos.y);
 	float deltaX = (finalPos.x - originPos.x);
-	
+
 	if(MODULE(deltaY) < 0.05) //aprox a pendiente 0
 	{
 		if(MODULE(point.y - originPos.y) < MODULE(displacement))
@@ -245,14 +270,34 @@ bool betweenTwoLines(Vector2 originPos, Vector2 finalPos, Vector2 point, float d
 		intersection.x = ( ((M * finalPos.x) + (point.x / M) - finalPos.y - point.y) / (M + (1/M)));
 		intersection.y = finalPos.y - (M * (finalPos.x - intersection.x));
 		float distPointInter = distanceOfCoords(point, intersection);
-		
+
 		if( distPointInter <= displacement)
 			return true;
 	}
 
-	return false;
+	return false; 
+	
+	/*
+	float B, C, H1, H2, X;
+	C = distanceOfCoords(finalPos, originPos);
+	H1 = distanceOfCoords(point, originPos);
+	H2 = distanceOfCoords(point, finalPos);
+
+	B = ((C * C) + (H2 * H2) - (H1 * H1)) / (2 * C);
+	X = sqrt((H2 * H2) - (B * B));
+
+	if (X < displacement)
+		return true;
+
+	return false;*/
 }
 
+/**
+ * @brief
+ *
+ * @param firstCoord
+ * @param secondCoord
+ */
 float distanceOfCoords(Vector2 firstCoord, Vector2 secondCoord)
 {
 	float deltaX = firstCoord.x - secondCoord.x;

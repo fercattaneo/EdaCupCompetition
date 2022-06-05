@@ -28,7 +28,7 @@ GameModel::GameModel(MQTTClient2& mqttClient, string myTeam)
 	dataPassing.ballVelocity = { 0,0,0 };
 	gameState = START;
 
-	float PIDparameters[6] = { 4, 0, 8, 0, 0, 0.005 };
+	float PIDparameters[6] = { 4, 0, 8, 0, 0, 50 };
 	vector<char> payloadPID(6 * sizeof(float));
 	memcpy(&payloadPID[0], PIDparameters, 6 * sizeof(float));
 
@@ -80,8 +80,6 @@ void GameModel::onMessage(string topic, vector<char> payload)
  */
 void GameModel::start()
 {
-	cout << "GameModel START" << endl;
-
 	for (int playerNumber = 0; playerNumber < team.size(); playerNumber++)
 	{
 		team[playerNumber]->start(playerNumber);
@@ -94,19 +92,25 @@ void GameModel::start()
 	dataPassing.oppTeamSpeed.resize(6);
 }
 
+/**
+ * @brief
+ *
+ * @param dataPassing
+ */
 void GameModel::updateGameConditions(inGameData_t& dataPassing)
 {
 	switch (gameState)
 	{
 	case START:
-		initialPositions();//start de los robots
+		initialPositions();			//start de los robots
 		gameState = PRE_KICKOFF;
 		break;
 	case PRE_KICKOFF:  //El equipo (1 o 2) está por realizar un saque inicial.
-		initialPositions();//start de los robots
+		initialPositions();			//start de los robots
 		break;
-	case KICKOFF: //El equipo (1 o 2) debe realizar el saque inicial.
-	case FREEKICK: //El equipo (1 o 2) debe realizar el tiro libre.
+	case KICKOFF: 		//El equipo (1 o 2) debe realizar el saque inicial.
+		kickonce(*team[5]);
+	case FREEKICK: 		//El equipo (1 o 2) debe realizar el tiro libre.
 		if(checkPlayingBall())
 		{
 			gameState = CONTINUE;
@@ -121,7 +125,8 @@ void GameModel::updateGameConditions(inGameData_t& dataPassing)
 	case PENALTY: //El equipo (1 o 2) debe realizar el tiro penal.
 		if (checkPlayingBall()) //le pega nuestro equipo
 		{
-			shoot(team[5], dataPassing.oppGoal);
+			//int val = (rand() % 2 == 0) ? 1 : -1;
+			shoot(team[5], {dataPassing.oppGoal.x, (1 * 0.45f)});
 			if(MODULE(dataPassing.ballVelocity.x) > 0.5)
 			{
 				gameState = CONTINUE;	
@@ -131,7 +136,7 @@ void GameModel::updateGameConditions(inGameData_t& dataPassing)
 			gameState = CONTINUE;
 		break;
 	case PAUSE: //El juego se detuvo
-		//no hace nada ¿? > se actualiza el game state con los mensajes nomas
+		pausePositions();
 		break;
 	case CONTINUE: //El juego se reanuda.
 		update(dataPassing); //esta es la de movimientos/pases/tiros...
@@ -150,7 +155,6 @@ void GameModel::updateGameConditions(inGameData_t& dataPassing)
 		break;
 	}
 }
-
 
 /**
  * @brief updates status of robots
@@ -190,7 +194,7 @@ void GameModel::update(inGameData_t& dataPassing)
 						}
 						else
 						{
-							cout << "No pude dar pase" << endl;
+							//cout << "No pude dar pase" << endl;
 							//dribbleTo();  //queda para hacerla
 						}
 					}
@@ -246,30 +250,25 @@ void GameModel::assignMessagePayload(string topic, vector<char>& payload)
 {
 	if (topic.compare(0, 6, "edacup") == 0) // game state messagge
 	{
-		cout << "EDACUP MESSAGGE" << endl;
 		if (topic.compare(7, 10, "preKickOff") == 0)
 			gameState = PRE_KICKOFF;
 		else if (topic.compare(7, 7, "kickOff") == 0)
 			gameState = KICKOFF;
 		else if (topic.compare(7, 11, "preFreeKick") == 0)
 		{	
-			cout << "Recibo llamada a PREFREEKICK" << endl;
 			gameState = PRE_FREEKICK;
 		}
 		else if (topic.compare(7, 8, "freeKick") == 0)
 		{
-			cout << "Recibo llamada a FREEKICK" << endl;
 			gameState = FREEKICK;
 		}
 		else if (topic.compare(7, 14, "prePenaltyKick") == 0)
 		{
 			gameState = PRE_PENALTY;
-			cout << "RECIBO LLAMADA A PRE PENALTY" << endl;
 		}
 		else if (topic.compare(7, 11, "penaltyKick") == 0)
 		{
 			gameState = PENALTY;
-			cout << "RECIBO LLAMADA A PENALTY" << endl;
 		}
 		else if (topic.compare(7, 5, "pause") == 0)
 			gameState = PAUSE;
@@ -504,10 +503,6 @@ void GameModel::setChipper(string robotID)
  */
 void GameModel::shoot(Players* player, Vector2 objectivePosition)
 {
-	// fijarse si esrtoy cerca de la pelota
-	// prender el dribbler
-	// si estoy en la rotacion correcta pego
-	// si no estoy cerca de la pelota me acerco
 	static int flag = 0;
 	Vector3 pos = player->getPosition();
 	Vector2 playerPosition = { pos.x, pos.z };
@@ -531,12 +526,11 @@ void GameModel::shoot(Players* player, Vector2 objectivePosition)
 			float distance = distanceOfCoords(playerPosition, objectivePosition);
 			float power;
 
-			if (objectivePosition.x == dataPassing.oppGoal.x &&
-				objectivePosition.y == dataPassing.oppGoal.y)		// Shoot goal
+			if (objectivePosition.x == dataPassing.oppGoal.x)	// Shoot to goal
 				power = 0.8;
 			else 
 			{
-				power = distance / 12;		
+				power = distance / 10;		
 				power = (power <= 0.3) ? 0.3 : power;
 			}				// pass 
 
@@ -596,13 +590,19 @@ void GameModel::setSetpoint(setPoint_t setpoint, int robotID)
 	else
 		propSetPoint = 0.3;
 	setpoint.coord = proportionalPosition({ posInCourt.x, posInCourt.z }, setpoint.coord, propSetPoint);
-	//checkForCollision({ posInCourt.x,posInCourt.z }, setpoint);
+	checkForCollision({ posInCourt.x,posInCourt.z }, setpoint);
 
 	if(isInCourt({setpoint.coord.x, 0, setpoint.coord.y})) //es valida la posicion
 	{
-		MQTTMessage setpointMessage = { "robot" + teamID + "." + to_string(robotID + 1) + "/pid/setpoint/set",
-									getArrayFromSetPoint(setpoint) };
-		messagesToSend.push_back(setpointMessage);
+		if(!((MODULE(dataPassing.oppGoal.x - dataPassing.ballPosition.x) <= 1.1f) &&
+			(dataPassing.ballPosition.z > -1.1f) && (dataPassing.ballPosition.z < 1.1f) &&
+			(MODULE(dataPassing.oppGoal.x - setpoint.coord.x) <= 1.1f) &&
+			(setpoint.coord.y > -1.1f) && (setpoint.coord.y < 1.1f))) //dentro del area enemiga
+		{
+			MQTTMessage setpointMessage = { "robot" + teamID + "." + to_string(robotID + 1) + 
+				"/pid/setpoint/set", getArrayFromSetPoint(setpoint) };
+			messagesToSend.push_back(setpointMessage);			
+		}
 	}
 }
 
@@ -616,33 +616,58 @@ void GameModel::checkForCollision(Vector2 actualPos, setPoint_t& setpoint)
 	float proxTime = 0.2;
 	Vector2 futurePosition = { 0, 0 };
 
-	for (int bot = 0; bot < 6; bot++)
+	for (int bot = 0; bot < 6; bot++)  // Check collision with oppTeam
 	{
-		Vector3 positionOpp = dataPassing.oppTeamPositions[bot];
+		Vector3 positionOpp = dataPassing.oppTeamFuturePos[bot];
 		if (betweenTwoLines(actualPos, setpoint.coord, { positionOpp.x, positionOpp.z }, 0.24f))
 		{
-			setpoint.coord = { dataPassing.oppTeamFuturePos[bot].x , dataPassing.oppTeamFuturePos[bot].z };
+			Vector3 vel = dataPassing.oppTeamSpeed[bot];
+			float signX;
+			float signZ;
+			if(MODULE(vel.x) < 0.05)
+				signX = 1;
+			else
+				signX = (vel.x / MODULE(vel.x));
+			if(MODULE(vel.z) < 0.05)
+				signZ = 1;
+			else
+				signZ = (vel.z / MODULE(vel.z));
+			setpoint.coord = { dataPassing.oppTeamFuturePos[bot].x - (signX * 0.2f),
+				dataPassing.oppTeamFuturePos[bot].z - (signZ * 0.2f)};
 			break;
 		}
 	}
-	for (int bot = 0; bot < 6; bot++)
+
+	for (int bot = 0; bot < 6; bot++)	// Check collision with team
 	{
 		Vector3 robotPosition = dataPassing.teamPositions[bot];
 		if (betweenTwoLines(actualPos, setpoint.coord, { robotPosition.x, robotPosition.z }, 0.24f))
-		{
-			futurePosition.x = (robotPosition.x + (dataPassing.ballVelocity.x * proxTime) -
-				(dataPassing.ballVelocity.x / MODULE(dataPassing.ballVelocity.x)) * 0.2);
-			futurePosition.y = (robotPosition.z + (dataPassing.ballVelocity.z * proxTime) -
-				(dataPassing.ballVelocity.z / MODULE(dataPassing.ballVelocity.z)) * 0.2);
-			setpoint.coord = { futurePosition.x, futurePosition.y };
+		{				
+			Vector3 vel = dataPassing.teamFuturePositions[bot];
+			float signX;
+			float signZ;
+			if(MODULE(vel.x) < 0.05)
+				signX = 1;
+			else
+				signX = (vel.x / MODULE(vel.x));
+			if(MODULE(vel.z) < 0.05)
+				signZ = 1;
+			else
+				signZ = (vel.z / MODULE(vel.z));
+			setpoint.coord = { dataPassing.oppTeamFuturePos[bot].x - (signX * 0.2f),
+				dataPassing.oppTeamFuturePos[bot].z - (signZ * 0.2f)};
+			setSetpoint({{ dataPassing.oppTeamFuturePos[bot].x + (signX * 0.2f),
+				dataPassing.oppTeamFuturePos[bot].z + (signZ * 0.2f)}, 0}, bot);  //corro el otro robot tambien
 			break;
 		}
 	}
 }
 
-
-//		PARA DESPUES, CUANDO TENGAMOS "TODO ARMADO"
-// funcion 
+/**
+ * @brief
+ * 
+ *
+ */
 void GameModel::searchFreeBall()
 {
 	setPoint_t destination;
@@ -674,6 +699,11 @@ void GameModel::searchFreeBall()
 	setSetpoint(destination, index);
 }
 
+/**
+ * @brief
+ * 
+ *
+ */
 void GameModel::analyzePosession()
 {
 	posession = FREE_BALL;
@@ -717,6 +747,11 @@ void GameModel::dribbleTo(Players& player)
 	//player->setSetpoint();
 }
 
+/**
+ * @brief
+ * 
+ *
+ */
 bool GameModel::isInCourt(Vector3 param)
 {
 	if (param.x > LENGTH_OF_COURT_X / 2 ||
@@ -728,6 +763,11 @@ bool GameModel::isInCourt(Vector3 param)
 		return true;
 }
 
+/**
+ * @brief
+ * 
+ *
+ */
 void GameModel::initialPositions()
 {
 	float sign = (dataPassing.myGoal.x) / (MODULE(dataPassing.myGoal.x));
@@ -739,7 +779,7 @@ void GameModel::initialPositions()
 		setSetpoint({ {(dataPassing.myGoal.x - (sign * 1.8f)),1}, rot }, 2); //def 2
 		setSetpoint({ {(dataPassing.myGoal.x - (sign * 2.5f)), 0}, rot }, 3); //midf
 		setSetpoint({ {(dataPassing.myGoal.x - (sign * 3.5f)), -1}, rot }, 4); //att 1
-		setSetpoint({ {(0 + (sign * 0.25f)), 0}, rot }, 5);  //att 2	
+		setSetpoint({ {(0 - (sign * 0.1f)), 0}, rot }, 5);  //att 2	
 	}
 	else
 	{
@@ -751,10 +791,13 @@ void GameModel::initialPositions()
 	}
 }
 
-
+/**
+ * @brief
+ * 
+ *
+ */
 void GameModel::penaltyPositions()
 {
-	//cout << "Estoy en penal, equipo: " << msjteam << endl;
 	Vector2 penPoint;
 
 	if(msjteam == (teamID[0] - '0')) //my team shooting
@@ -770,7 +813,7 @@ void GameModel::penaltyPositions()
 
 	float sign = (penPoint.x) / (MODULE(penPoint.x));
 	float XPoint = (penPoint.x + sign);
-	float rot = (sign > 0) ? 270 : 90;
+	float rot = calculateRotation(penPoint, dataPassing.oppGoal);
 	setSetpoint({{dataPassing.myGoal.x, 0}, rot }, 0); //goalie
 	setSetpoint({{XPoint, 0.3}, rot }, 1); //def 1
 	setSetpoint({{XPoint,	-0.3}, rot }, 2); //def 2
@@ -782,9 +825,13 @@ void GameModel::penaltyPositions()
 		setSetpoint({{XPoint, 0}, rot }, 5);
 }
 
+/**
+ * @brief
+ * 
+ *
+ */
 void GameModel::freekickPositions()
 {
-	//cout << "Estoy en tiro libre, equipo: " << msjteam << endl;
 	if(msjteam == (teamID[0] - '0')) //my team shooting
 	{
 		float rot = calculateRotation(dataPassing.oppGoal, {dataPassing.ballPosition.x, dataPassing.ballPosition.z});
@@ -814,8 +861,8 @@ void GameModel::freekickPositions()
 		setSetpoint({ {barrierPos.x, barrierPos.y + 0.25f}, rot }, 4);//att 1
 		setSetpoint({ {barrierPos.x, barrierPos.y + 0.5f}, rot }, 5);//att 2
 	}
-	cout << "Actualize setPoint" << endl;
 }
+
 /**
 * @brief checks for the optimal pass
 *
@@ -850,6 +897,11 @@ int GameModel::analyzePass(Players& player)
 	return 7;
 }
 
+/**
+ * @brief
+ * 
+ *
+ */
 Vector2 GameModel::analyzeShoot(Players& player)
 {
 	Vector2 objectivePosition = player.openZPlace(0.01, dataPassing,
@@ -865,6 +917,11 @@ Vector2 GameModel::analyzeShoot(Players& player)
 	return objectivePosition;
 }
 
+/**
+ * @brief
+ * 
+ *
+ */
 bool GameModel::checkPlayingBall()
 {
 	if (msjteam == (oppTeamID[0] - '0'))
@@ -894,4 +951,67 @@ bool GameModel::checkPlayingBall()
 	}
 	else
 		return true;
+}
+
+/**
+ * @brief
+ *
+ * @param player
+ */
+void GameModel::kickonce(Players &player)
+{
+	if(msjteam == (teamID[0] - '0'))
+	{
+		setKicker(to_string(player.robotID),0.5);
+		// setPoint_t setpoint;
+		// setpoint.coord = {dataPassing.ballPosition.x, dataPassing.ballPosition.z};
+		// setpoint.rotation = 180.0f;
+		// setSetpoint(setpoint, player->robotID);
+		// Vector3 pos = player.getPosition();
+		// if(MODULE(pos.x -setpoint.coord.x) < 0.01 && MODULE(pos.z -setpoint.coord.y) < 0.01)
+		// {
+		// 	setKicker(to_string(player->robotID),0.5);
+		// }
+		/*int pass = analyzePass(player); //Recibe player
+		if (pass == 7) //No puede patear al arco o hacer un pase.
+		{
+			for (auto player : team)
+			{
+				Vector3 bot = player->getPosition();
+				if (player->robotID == 5)
+					continue;
+				if (isCloseTo({bot.x, bot.z},{dataPassing.ballPosition.x, dataPassing.ballPosition.z}, 0.12f))
+				{
+					setSetpoint(setpoint, player->robotID);
+					break;
+				}
+			}
+		}
+		else
+			shoot(&player, { dataPassing.teamPositions[pass].x,dataPassing.teamPositions[pass].z });
+		*/
+	}
+}
+
+/**
+ * @brief
+ * 
+ *
+ */
+void GameModel::pausePositions()
+{
+	for (auto player : team)
+	{
+		Vector3 bot = player->getPosition();
+		if (isCloseTo({bot.x, bot.z}, {dataPassing.ballPosition.x, dataPassing.ballPosition.z}, 0.65))
+		{
+			float dist = distanceOfCoords({bot.x, bot.z},
+				{dataPassing.ballPosition.x, dataPassing.ballPosition.z});
+			float sign = dataPassing.ballPosition.x - bot.x;
+			sign = sign/MODULE(sign);
+			float rot = calculateRotation({ bot.x, bot.z },
+				{ dataPassing.ballPosition.x, dataPassing.ballPosition.z });
+			setSetpoint({ {bot.x - (sign * (1.0f - dist)), bot.z}, rot }, player->robotID);
+		}
+	}
 }
