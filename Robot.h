@@ -46,8 +46,11 @@ public:
     void setAngularSpeed(Vector3 newAngSpeed);
     void setPowerLevels(Vector3 powerValues);
     void setSetpoint(setPoint_t setpoint);
+    void toEnablePlayer(void);
+    void dissablePlayer(void);
 
 protected:
+    bool enablePlayer;
     Vector3 position;
     Vector3 rotation;
     Vector3 speed;

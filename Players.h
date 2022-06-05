@@ -60,11 +60,10 @@ public:
     Vector2 openZPlace (float dist, inGameData_t &data, Vector2 point0, Vector2 point1, Vector2 vertix);
     
     int fieldRol;
-    void toEnablePlayer(void);
-    void dissablePlayer(void);
+
 
 private:
-    bool enablePlayer;
+
     
     // GOALIE
     void save(inGameData_t &gameData);

@@ -47,10 +47,10 @@ void Players::update(inGameData_t gameData)
 		save(gameData);
 		break;
 	case DEFENSE:
-		defendGoal(gameData, 0.5);
+		defendGoal(gameData, -0.5);
 		break;
 	case DEFENSE2:
-		defendGoal(gameData, -0.5);
+		defendGoal(gameData, 0.5);
 		break;
 	case MIDFIELDER:
 		midfielderReposition(gameData);
@@ -118,21 +118,7 @@ setPoint_t Players::kickBallLogic(Vector2 objectivePosition, Vector2 ballPositio
 	}
 }
 
-/**
- * @brief: enables robot for playing
- */
-void Players::toEnablePlayer(void)
-{
-	enablePlayer = true;
-}
 
-/**
- * @brief: dissables robot for playing
- */
-void Players::dissablePlayer(void)
-{
-	enablePlayer = false;
-}
 
 /**
  * @brief calculates position of first shooter
@@ -146,10 +132,13 @@ void Players::shooterReposition(inGameData_t& data)  //capaz esta plagada de err
 	{
 		for (int bot2 = bot1 + 1; bot2 < 6; bot2++)
 		{
-			Vector2 midPoint = proportionalPosition({ data.oppTeamPositions[bot1].x, data.oppTeamPositions[bot1].z },
-				{ data.oppTeamPositions[bot2].x, data.oppTeamPositions[bot2].z }, 0.5);
-			midPoints.push_back(midPoint);
-
+			if(data.oppTeamPositions[bot1].y != 100)
+			{
+				Vector2 midPoint = proportionalPosition({ data.oppTeamPositions[bot1].x, 
+					data.oppTeamPositions[bot1].z }, { data.oppTeamPositions[bot2].x,
+					data.oppTeamPositions[bot2].z }, 0.5);
+				midPoints.push_back(midPoint);
+			}
 		}
 	}
 
@@ -163,10 +152,14 @@ void Players::shooterReposition(inGameData_t& data)  //capaz esta plagada de err
 		Vector2 point = midPoints.back();
 		for (int bot = 0; bot < 6; bot++)  //mira distancias entre enemigo y pnto medio
 		{
-			float distance = distanceOfCoords(point, { data.oppTeamPositions[bot].x,data.oppTeamPositions[bot].z });
-			if (distance < minDistance)   //selecciona al punto medio mas "comodo"
+			if(data.oppTeamPositions[bot].y != 100)
 			{
-				minDistance = distance;
+				float distance = distanceOfCoords(point, { data.oppTeamPositions[bot].x,
+					data.oppTeamPositions[bot].z });
+				if (distance < minDistance)   //selecciona al punto medio mas "comodo"
+				{
+					minDistance = distance;
+				}
 			}
 		}
 		if (minDistance > maxDistance)
@@ -194,25 +187,31 @@ void Players::secondShooterReposition(inGameData_t& data)  //capaz esta plagada 
 	vector<Vector2> midPoints;
 	for (auto bot1 : data.oppTeamPositions)   //obtengo los puntos medios entre enemigos
 	{
-		for (auto bot2 : data.oppTeamPositions)
+		if(bot1.y != 100)
 		{
-			float distanceBetweenEnemies = distanceOfCoords({ bot1.x,bot1.z }, { bot2.x,bot2.z });
-			if (distanceBetweenEnemies > 0.2)
+			for (auto bot2 : data.oppTeamPositions)
 			{
-				Vector2 midPoint = proportionalPosition({ bot1.x, bot1.z },
-					{ bot2.x, bot2.z }, 0.5);
-				if (MODULE((data.oppGoal.x - midPoint.x)) > 0.2)
+				if(bot2.y != 100)
 				{
-					midPoints.push_back(midPoint);
+					float distanceBetweenEnemies = distanceOfCoords({ bot1.x,bot1.z }, { bot2.x,bot2.z });
+					if (distanceBetweenEnemies > 0.2)
+					{
+						Vector2 midPoint = proportionalPosition({ bot1.x, bot1.z },
+							{ bot2.x, bot2.z }, 0.5);
+						if (MODULE((data.oppGoal.x - midPoint.x)) > 0.2)
+						{
+							midPoints.push_back(midPoint);
+						}
+					}
 				}
 			}
+			Vector2 firstCorner = { data.oppGoal.x, 3 }; //calculo con una esquina
+			Vector2 firstCornerMidPoint = proportionalPosition({ bot1.x, bot1.z }, firstCorner, 0.5);
+			midPoints.push_back(firstCornerMidPoint);
+			Vector2 secondCorner = { data.oppGoal.x, -3 }; //calculo con otra esquina
+			Vector2 secondCornerMidPoint = proportionalPosition({ bot1.x, bot1.z }, secondCorner, 0.5);
+			midPoints.push_back(secondCornerMidPoint);
 		}
-		Vector2 firstCorner = { data.oppGoal.x, 3 }; //calculo con una esquina
-		Vector2 firstCornerMidPoint = proportionalPosition({ bot1.x, bot1.z }, firstCorner, 0.5);
-		midPoints.push_back(firstCornerMidPoint);
-		Vector2 secondCorner = { data.oppGoal.x, -3 }; //calculo con otra esquina
-		Vector2 secondCornerMidPoint = proportionalPosition({ bot1.x, bot1.z }, secondCorner, 0.5);
-		midPoints.push_back(secondCornerMidPoint);
 	}
 
 	float maxDist = 0;
@@ -224,9 +223,12 @@ void Players::secondShooterReposition(inGameData_t& data)  //capaz esta plagada 
 		Vector2 point = midPoints.back();
 		for (auto bot : data.oppTeamPositions)  //mira distancias entre enemigo y pnto medio
 		{
-			float distance = distanceOfCoords(point, { bot.x,bot.z });
-			if (distance < minDistance)   //selecciona al punto medio mas "comodo"
-				minDistance = distance;
+			if(bot.y != 100)
+			{
+				float distance = distanceOfCoords(point, { bot.x,bot.z });
+				if (distance < minDistance)   //selecciona al punto medio mas "comodo"
+					minDistance = distance;
+			}
 		}
 
 		float distance = distanceOfCoords(point, { data.oppGoal.x,3 });
@@ -284,14 +286,6 @@ void Players::save(inGameData_t& gameData)
 			gameData.ballPosition.z },
 			prop);
 
-		// Vector2 ballVel = {gameData.ballVelocity.x , gameData.ballVelocity.z};
-		/*if(MODULE(ballVel.x) > 0.33)
-		{
-			float shootingPower = gameData.myGoal.x / ballVel.x;
-			if(shootingPower > 0 && MODULE(ballVel.y * shootingPower) < 0.3)
-				destination.y = ballVel.y * shootingPower;
-		}*/
-
 		//TESTING
 		if (MODULE(gameData.myGoal.x - gameData.ballPosition.x) < 0.8 &&
 			MODULE(gameData.myGoal.x - gameData.ballPosition.x) < 1.5)
@@ -335,7 +329,6 @@ void Players::defendGoal(inGameData_t& data, float goalZpoint)
 	{
 		destination.coord = proportionalPosition({ data.myGoal.x, goalZpoint },  //va hacia la pelota
 			{ data.ballPosition.x, data.ballPosition.z }, 1);
-		//TODO: set dribbler
 	}
 	destination.rotation = calculateRotation({ data.ballPosition.x, data.ballPosition.z },
 		{ position.x, position.z });

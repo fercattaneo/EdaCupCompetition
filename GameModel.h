@@ -23,15 +23,16 @@ using namespace std;
 
 enum GameState
 {
-    START,
-    PRE_KICKOFF,
-    KICKOFF,
-    PRE_FREEKICK,
-    FREEKICK,
-    PRE_PENALTY,
-    PENALTY,
-    PAUSE,
-    CONTINUE,
+    //Despues de un gol se presiona pause
+    START, //saque del centro
+    PRE_KICKOFF, //jugadores del lado de cancha correspondiente
+    KICKOFF, //saque inical y puedo patear de una al alrco bajar la vel a 1,5 m/s
+    PRE_FREEKICK, //Posicion de tiro libre
+    FREEKICK, //Tiro libre bajar la vel a 1,5 m/s
+    PRE_PENALTY, //Posicion de penal
+    PENALTY, //Penal
+    PAUSE, //no se juega y hay que bajar la vel a 1,5 m/s y 0,5 mts de la pelota 
+    CONTINUE, //nuestro modo de jugar
     REMOVE_ROBOT,
     ADD_ROBOT,
     ENDED_GAME,
@@ -70,6 +71,7 @@ private:
     int robotWithBall;
     string teamID;
     string oppTeamID;
+    int msjteam;
 
     vector<Players *> team;
     void updateGameConditions(inGameData_t& dataPassing);
@@ -98,8 +100,10 @@ private:
     Vector2 analyzeShoot(Players &player);
     bool checkForInterception(vector<Vector3> &oppTeam, Vector2 objective, Vector2 teamPosition); 
     void dribbleTo(Players &player);
-    bool isBallInCourt();
+    bool isInCourt(Vector3 param);
     void initialPositions();
+    void freekickPositions();
+    void penaltyPositions();
 
 };
 

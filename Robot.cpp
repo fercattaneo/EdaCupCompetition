@@ -75,3 +75,19 @@ setPoint_t Robot::getSetPoint()
     setpoint.rotation = rotation.y;
 	return (setpoint);*/
 }
+
+/**
+ * @brief: enables robot for playing
+ */
+void Robot::toEnablePlayer(void)
+{
+    enablePlayer = true;
+}
+
+/**
+ * @brief: dissables robot for playing
+ */
+void Robot::dissablePlayer(void)
+{
+    enablePlayer = false;
+}
