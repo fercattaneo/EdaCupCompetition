@@ -106,24 +106,29 @@ void GameModel::updateGameConditions(inGameData_t& dataPassing)
 		initialPositions();//start de los robots
 		break;
 	case KICKOFF: //El equipo (1 o 2) debe realizar el saque inicial.
-		update(dataPassing);
+	case FREEKICK: //El equipo (1 o 2) debe realizar el tiro libre.
+		if(checkPlayingBall())
+		{
+			gameState = CONTINUE;
+		}
 		break;
 	case PRE_FREEKICK: //El equipo (1 o 2) está por realizar un tiro libre.
 		freekickPositions(); //medio metro de la pelota
-		break;
-	case FREEKICK: //El equipo (1 o 2) debe realizar el tiro libre.
-		update(dataPassing);
-		// probar si sirve poner el continue, sino cagamo'
-		//aplicar condiciones de tiro libre para cambiar el modo a continue
 		break;
 	case PRE_PENALTY: // El equipo (1 o 2) está por realizar un tiro penal
 		penaltyPositions();
 		break;
 	case PENALTY: //El equipo (1 o 2) debe realizar el tiro penal.
-		//funcion de penal
-		//aplicar condiciones de penal para cambiar el modo a continue
-		shoot(team[5],dataPassing.oppGoal);
-		gameState = CONTINUE;
+		if (checkPlayingBall()) //le pega nuestro equipo
+		{
+			shoot(team[5], dataPassing.oppGoal);
+			if(MODULE(dataPassing.ballVelocity.x) > 0.5)
+			{
+				gameState = CONTINUE;	
+			}
+		}
+		else
+			gameState = CONTINUE;
 		break;
 	case PAUSE: //El juego se detuvo
 		//no hace nada ¿? > se actualiza el game state con los mensajes nomas
@@ -531,7 +536,7 @@ void GameModel::shoot(Players* player, Vector2 objectivePosition)
 				power = 0.8;
 			else 
 			{
-				power = distance / 15;		
+				power = distance / 12;		
 				power = (power <= 0.3) ? 0.3 : power;
 			}				// pass 
 
@@ -591,7 +596,7 @@ void GameModel::setSetpoint(setPoint_t setpoint, int robotID)
 	else
 		propSetPoint = 0.3;
 	setpoint.coord = proportionalPosition({ posInCourt.x, posInCourt.z }, setpoint.coord, propSetPoint);
-	checkForCollision({ posInCourt.x,posInCourt.z }, setpoint);
+	//checkForCollision({ posInCourt.x,posInCourt.z }, setpoint);
 
 	if(isInCourt({setpoint.coord.x, 0, setpoint.coord.y})) //es valida la posicion
 	{
@@ -809,6 +814,7 @@ void GameModel::freekickPositions()
 		setSetpoint({ {barrierPos.x, barrierPos.y + 0.25f}, rot }, 4);//att 1
 		setSetpoint({ {barrierPos.x, barrierPos.y + 0.5f}, rot }, 5);//att 2
 	}
+	cout << "Actualize setPoint" << endl;
 }
 /**
 * @brief checks for the optimal pass
@@ -857,4 +863,35 @@ Vector2 GameModel::analyzeShoot(Players& player)
 		objectivePosition = dataPassing.oppGoal;
 
 	return objectivePosition;
+}
+
+bool GameModel::checkPlayingBall()
+{
+	if (msjteam == (oppTeamID[0] - '0'))
+	{
+		//ver si se movio 5 cm o si ya pasaron 10 segundos
+		static float initialTime;
+		static Vector2 ballInitialPos; //donde se llama al tiro libre
+		float actualTime = GetTime();
+		static bool valid = false;
+		if (!valid) // 1er llamado
+		{
+			initialTime = GetTime();
+			ballInitialPos = { dataPassing.ballPosition.x, dataPassing.ballPosition.z };
+			valid = true;
+		}
+		else //el resto de los llamados hasta salir de la condicion
+		{
+			if ((distanceOfCoords(ballInitialPos, { dataPassing.ballPosition.x, dataPassing.ballPosition.z })
+				>= 0.05) || ((actualTime - initialTime) >= 10))
+			{
+				valid = false;
+				return true;
+			}
+		}
+		return false;
+
+	}
+	else
+		return true;
 }

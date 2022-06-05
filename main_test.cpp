@@ -32,6 +32,7 @@ int main(int argc, char *argv[])
 	}
 
 	string myTeam = "1";
+
 	GameModel gameModel(client, myTeam);
 
 	Players player1;
@@ -59,6 +60,7 @@ int main(int argc, char *argv[])
 	gameModel.start();
 
 	client.setListener(&gameModel);
+
 
 	cout << "Game STARTING..." << endl;
 

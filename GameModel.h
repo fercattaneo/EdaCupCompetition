@@ -95,15 +95,17 @@ private:
     void checkForCollision(Vector2 actualPos, setPoint_t &setpoint);
     string getTeamID();
 
-    /*TESTING*/
     int analyzePass(Players &player);
     Vector2 analyzeShoot(Players &player);
-    bool checkForInterception(vector<Vector3> &oppTeam, Vector2 objective, Vector2 teamPosition); 
-    void dribbleTo(Players &player);
     bool isInCourt(Vector3 param);
     void initialPositions();
     void freekickPositions();
     void penaltyPositions();
+
+    /*TESTING*/
+    bool checkForInterception(vector<Vector3> &oppTeam, Vector2 objective, Vector2 teamPosition); 
+    void dribbleTo(Players &player);
+    bool checkPlayingBall();
 
 };
 
