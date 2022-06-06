@@ -85,7 +85,7 @@ float calculateRotation(Vector2 originPos, Vector2 rotateHere)
 	// float deltaZ = finalPos.y - originPos.y;
 
 	float deltaX = rotateHere.x - originPos.x;
-	float deltaZ = rotateHere.y - originPos.y;
+	float deltaZ = originPos.y - rotateHere.y;
 
 	/*if (deltaX == 0 && deltaZ == 0)
 		return 180;
@@ -119,9 +119,9 @@ float calculateRotation(Vector2 originPos, Vector2 rotateHere)
 	else
 	{
 		if(deltaX > 0)
-			angle = 90 + ((deltaZ > 0) ? (- angle) : angle);
+			angle = 90 - ((deltaZ > 0) ? (- angle) : angle);
 		else
-			angle = 270 - ((deltaZ > 0) ? (- angle) : angle);
+			angle = 270 + ((deltaZ > 0) ? (- angle) : angle);
 	}
 
 	return angle;

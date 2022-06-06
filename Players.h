@@ -54,7 +54,7 @@ public:
     Players();
     ~Players();
 
-    void update(inGameData_t gameData);
+    void update(inGameData_t &gameData, bool attacking);
     void start(int playerNumber);
     setPoint_t goToBall(Vector2 objectivePosition, Vector2 ballPosition, float proportional);
     setPoint_t kickBallLogic(Vector2 objectivePosition, Vector2 ballPosition);

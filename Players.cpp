@@ -39,7 +39,7 @@ void Players::start(int playerNumber)
  *
  * @param gameData
  */
-void Players::update(inGameData_t gameData)
+void Players::update(inGameData_t &gameData, bool attacking)
 {
 	switch (fieldRol)   //POR AHORA REPOSICIONES NOMAS
 	{
@@ -53,10 +53,17 @@ void Players::update(inGameData_t gameData)
 		defendGoal(gameData, 0.5);
 		break;
 	case MIDFIELDER:
-		midfielderReposition(gameData);
+		if(attacking)
+			midfielderReposition(gameData);
+		else
+			defensiveMidfielder(gameData);
 		break;
 	case SHOOTER:
-		shooterReposition(gameData);
+		if(attacking)
+			shooterReposition(gameData);
+		else
+			setSetpoint({ proportionalPosition({gameData.ballPosition.x, gameData.ballPosition.z},
+				{0,0}, 0.35), calculateRotation({0,0},{gameData.ballPosition.x, gameData.ballPosition.z})});
 		break;
 	case SHOOTER2:
 		secondShooterReposition(gameData);
@@ -173,7 +180,7 @@ void Players::shooterReposition(inGameData_t& data)  //capaz esta plagada de err
 
 	setPoint_t idealSetPoint;
 	idealSetPoint.coord = { idealMidpoint.x, idealMidpoint.y };
-	idealSetPoint.rotation = calculateRotation({ data.ballPosition.x,data.ballPosition.z }, idealSetPoint.coord);
+	idealSetPoint.rotation = calculateRotation(idealSetPoint.coord, { data.ballPosition.x,data.ballPosition.z });
 	this->setSetpoint(idealSetPoint);
 }
 
@@ -249,7 +256,7 @@ void Players::secondShooterReposition(inGameData_t& data)  //capaz esta plagada 
 	}
 	setPoint_t idealSetPoint;
 	idealSetPoint.coord = { idealMidpoint.x, idealMidpoint.y };
-	idealSetPoint.rotation = calculateRotation({ data.ballPosition.x,data.ballPosition.z }, idealSetPoint.coord);
+	idealSetPoint.rotation = calculateRotation(idealSetPoint.coord, { data.ballPosition.x,data.ballPosition.z });
 	this->setSetpoint(idealSetPoint);
 }
 
@@ -295,8 +302,7 @@ void Players::save(inGameData_t& gameData)
 		//END TESTING
 	}
 
-	float alpha = calculateRotation({ gameData.ballPosition.x, gameData.ballPosition.z },
-		{ position.x, position.z });
+	float alpha = calculateRotation({ position.x, position.z }, { gameData.ballPosition.x, gameData.ballPosition.z });
 	setSetpoint({ destination, alpha });
 
 }
@@ -330,8 +336,7 @@ void Players::defendGoal(inGameData_t& data, float goalZpoint)
 		destination.coord = proportionalPosition({ data.myGoal.x, goalZpoint },  //va hacia la pelota
 			{ data.ballPosition.x, data.ballPosition.z }, 1);
 	}
-	destination.rotation = calculateRotation({ data.ballPosition.x, data.ballPosition.z },
-		{ position.x, position.z });
+	destination.rotation = calculateRotation({ position.x, position.z }, { data.ballPosition.x, data.ballPosition.z });
 	setSetpoint(destination);
 }
 
@@ -384,7 +389,7 @@ void Players::midfielderReposition(inGameData_t& data)
 {
 	///// ANGULAR VERSION ~ TESTING
 	Vector2 dest = openZPlace(0.1, data, { 0,-2.7 }, { 0,2.7 }, { data.ballPosition.x, data.ballPosition.z });
-	float rotation = calculateRotation({ data.ballPosition.x, data.ballPosition.z }, dest);
+	float rotation = calculateRotation(dest, { data.ballPosition.x, data.ballPosition.z });
 	setSetpoint({ dest, rotation });
 }
 

@@ -171,6 +171,9 @@ void GameModel::update(inGameData_t& dataPassing)
 		}
 		else
 		{
+			// 1er update -> el q tiene la pelota
+			// bloquear el update de quien la reciba
+			// for con el resto de los robots update
 			for (auto player : team)
 			{
 				if (player->robotID == robotWithBall && posession == MY_TEAM) 	//tiene la pelota
@@ -184,9 +187,9 @@ void GameModel::update(inGameData_t& dataPassing)
 						int indexForPass = analyzePass(*player);
 						if (indexForPass != 7) // " 7 como valor de no hay pase "
 						{
-							Vector3 passingPlace3D = team[indexForPass]->getPosition();
+							Vector3 passingPlace3D = dataPassing.teamFuturePositions[indexForPass];
 							Vector2 passingPlace = { passingPlace3D.x, passingPlace3D.z };
-							team[indexForPass]->setSetpoint({calculateRotation(
+							team[indexForPass]->setSetpoint({passingPlace,calculateRotation(
 								{dataPassing.ballPosition.x, dataPassing.ballPosition.z},
 								passingPlace)});  //ver la rotacion del receptor
 							setDribbler(to_string(indexForPass),true);
@@ -201,20 +204,8 @@ void GameModel::update(inGameData_t& dataPassing)
 				}
 				else    //no tiene la pelota
 				{
-					player->update(dataPassing);
+					player->update(dataPassing, (posession == MY_TEAM));
 				}
-
-				// TESTING
-				/*if (player->robotID != 2)
-				{
-					player->update(dataPassing);
-				}
-				else
-				{
-					shoot(player, dataPassing.oppGoal);
-				}
-				*/
-
 			}
 		}
 		updatePositions();
@@ -507,14 +498,14 @@ void GameModel::shoot(Players* player, Vector2 objectivePosition)
 	Vector3 pos = player->getPosition();
 	Vector2 playerPosition = { pos.x, pos.z };
 	Vector2 ballLocation = { dataPassing.ballPosition.x, dataPassing.ballPosition.z };
-	float rotation = calculateRotation({ dataPassing.ballPosition.x,
-										dataPassing.ballPosition.z }, playerPosition);
+	float rotation = calculateRotation(playerPosition, { dataPassing.ballPosition.x,
+										dataPassing.ballPosition.z });
 
 	voltageKickerChipper(to_string(player->robotID + 1));
 
 	if (isCloseTo(playerPosition, ballLocation, 0.1f) && flag == 5) //radio mas chico	
 	{
-		rotation = calculateRotation(objectivePosition, playerPosition);
+		rotation = calculateRotation(playerPosition, objectivePosition);
 		float botRealRot = player->getRotation().y;
 		rotation += (rotation < 0) ? 360 : 0;
 		botRealRot += (botRealRot < 0) ? 360 : 0;
@@ -526,11 +517,11 @@ void GameModel::shoot(Players* player, Vector2 objectivePosition)
 			float distance = distanceOfCoords(playerPosition, objectivePosition);
 			float power;
 
-			if (objectivePosition.x == dataPassing.oppGoal.x)	// Shoot to goal
+			if ((objectivePosition.x == dataPassing.oppGoal.x) || distance >= 4.0f)	// Shoot to goal
 				power = 0.8;
 			else 
 			{
-				power = distance / 10;		
+				power = distance / 5;		
 				power = (power <= 0.3) ? 0.3 : power;
 			}				// pass 
 
@@ -694,8 +685,8 @@ void GameModel::searchFreeBall()
 			index = ally->robotID;
 		}
 	}
-	destination.rotation = calculateRotation({ dataPassing.ballPosition.x, dataPassing.ballPosition.z }, 
-		{ destination.coord.x, destination.coord.y });
+	destination.rotation = calculateRotation({ destination.coord.x, destination.coord.y },
+		{ dataPassing.ballPosition.x, dataPassing.ballPosition.z });
 	setSetpoint(destination, index);
 }
 
@@ -779,7 +770,7 @@ void GameModel::initialPositions()
 		setSetpoint({ {(dataPassing.myGoal.x - (sign * 1.8f)),1}, rot }, 2); //def 2
 		setSetpoint({ {(dataPassing.myGoal.x - (sign * 2.5f)), 0}, rot }, 3); //midf
 		setSetpoint({ {(dataPassing.myGoal.x - (sign * 3.5f)), -1}, rot }, 4); //att 1
-		setSetpoint({ {(0 - (sign * 0.1f)), 0}, rot }, 5);  //att 2	
+		setSetpoint({ {(0 - (sign * 0.1f)), 0}, calculateRotation({0,0}, dataPassing.myGoal)}, 5);  //att 2	
 	}
 	else
 	{
@@ -834,7 +825,7 @@ void GameModel::freekickPositions()
 {
 	if(msjteam == (teamID[0] - '0')) //my team shooting
 	{
-		float rot = calculateRotation(dataPassing.oppGoal, {dataPassing.ballPosition.x, dataPassing.ballPosition.z});
+		float rot = calculateRotation({dataPassing.ballPosition.x, dataPassing.ballPosition.z}, dataPassing.oppGoal);
 		setPoint_t setpoint;
 		setpoint.coord = {dataPassing.ballPosition.x + 
 			(dataPassing.myGoal.x/MODULE(dataPassing.myGoal.x)) * 0.2f,
@@ -851,7 +842,7 @@ void GameModel::freekickPositions()
 		if(distanceOfCoords(barrierPos, {dataPassing.ballPosition.x, dataPassing.ballPosition.z}) < 0.5)
 			barrierPos.x = dataPassing.myGoal.x - (1.5 * dataPassing.myGoal.x / MODULE(dataPassing.myGoal.x));
 			
-		float rot = calculateRotation({ dataPassing.ballPosition.x, dataPassing.ballPosition.z }, dataPassing.myGoal);
+		float rot = calculateRotation(dataPassing.myGoal, { dataPassing.ballPosition.x, dataPassing.ballPosition.z });
 
 		setSetpoint({ {dataPassing.myGoal.x, 0}, rot }, 0); //goalie
 
@@ -911,7 +902,7 @@ Vector2 GameModel::analyzeShoot(Players& player)
 	if (objectivePosition.y == 0)
 		objectivePosition = { 0,0 }; //condicion del NO TIRO
 	Vector3 baller = player.getPosition();
-	if (distanceOfCoords({ baller.x, baller.z }, dataPassing.oppGoal) < 1.7)
+	if (distanceOfCoords({ baller.x, baller.z }, dataPassing.oppGoal) < 2.7)
 		objectivePosition = dataPassing.oppGoal;
 
 	return objectivePosition;
