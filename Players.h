@@ -54,7 +54,7 @@ public:
     Players();
     ~Players();
 
-    void update(inGameData_t &gameData, bool attacking);
+    void update(inGameData_t &gameData, int attacking);
     void start(int playerNumber);
     setPoint_t goToBall(Vector2 objectivePosition, Vector2 ballPosition, float proportional);
     setPoint_t kickBallLogic(Vector2 objectivePosition, Vector2 ballPosition);
@@ -70,7 +70,7 @@ private:
     void save(inGameData_t &gameData);
 
     // DEFENSE
-    void defendGoal(inGameData_t &data, float goalZpoint);
+    void defendGoal(inGameData_t &data, int attacking, float goalZpoint);
     
     // MIDFIELDER
     void midfielderReposition(inGameData_t& data);

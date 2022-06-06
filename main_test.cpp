@@ -31,6 +31,7 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
+	//string myTeam = argv[1];  //Se lee por linea de comando qué equipo somos
 	string myTeam = "1";
 
 	GameModel gameModel(client, myTeam);
@@ -41,12 +42,12 @@ int main(int argc, char *argv[])
 	Players player4;
 	Players player5;
 	Players player6;
-	gameModel.addPlayer(&player1);
-	gameModel.addPlayer(&player2);
-	gameModel.addPlayer(&player3);
-	gameModel.addPlayer(&player4);
-	gameModel.addPlayer(&player5);
-	gameModel.addPlayer(&player6);
+	gameModel.addRobot(&player1);
+	gameModel.addRobot(&player2);
+	gameModel.addRobot(&player3);
+	gameModel.addRobot(&player4);
+	gameModel.addRobot(&player5);
+	gameModel.addRobot(&player6);
 
 	gameModel.setDisplay(IMAGES_PATH + "Robot1.png", "robot" + myTeam + ".1");
 	gameModel.setDisplay(IMAGES_PATH + "Robot2.png", "robot" + myTeam + ".2");

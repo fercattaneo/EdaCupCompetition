@@ -38,7 +38,7 @@ public:
     Vector3 getSpeed();
     Vector3 getAngularSpeed();
     float getKickerCharge();
-    setPoint_t getSetPoint(void);
+    setPoint_t getSetPoint();
 
     void setPosition(Vector3 newPos);
     void setRotation(Vector3 newRot);
@@ -46,8 +46,8 @@ public:
     void setAngularSpeed(Vector3 newAngSpeed);
     void setPowerLevels(Vector3 powerValues);
     void setSetpoint(setPoint_t setpoint);
-    void enablePlayer(void);
-    void dissablePlayer(void);
+    void enablePlayer();
+    void dissablePlayer();
 
 protected:
     bool inField;
@@ -59,4 +59,4 @@ protected:
     setPoint_t setpoint;
 };
 
-#endif
+#endif //ROBOT_H

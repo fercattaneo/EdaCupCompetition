@@ -1,5 +1,5 @@
-#ifndef HEAT
-#define HEAT
+#ifndef HEAT_H
+#define HEAT_H
 
 #include <iostream>
 #include <algorithm>

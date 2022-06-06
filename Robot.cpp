@@ -70,10 +70,7 @@ float Robot::getKickerCharge()
 
 setPoint_t Robot::getSetPoint()
 {
-    return setpoint; //TODO :Cambiar esto, no podemos actualizarlo con la posición  
-    /*setpoint.coord = {position.x, position.z};
-    setpoint.rotation = rotation.y;
-	return (setpoint);*/
+    return setpoint; 
 }
 
 /**

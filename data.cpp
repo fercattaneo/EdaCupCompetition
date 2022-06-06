@@ -38,7 +38,7 @@ float getFloat(vector<char> vec)
 }
 
 /**
- * @brief Get the Data From Float object
+ * @brief gets vector<char> from float
  *
  * @param data
  * @return vector<char>
@@ -86,30 +86,6 @@ float calculateRotation(Vector2 originPos, Vector2 rotateHere)
 
 	float deltaX = rotateHere.x - originPos.x;
 	float deltaZ = originPos.y - rotateHere.y;
-
-	/*if (deltaX == 0 && deltaZ == 0)
-		return 180;
-	if (deltaZ == 0)
-		return 270;
-	if (deltaX == 0)
-		return 180;
-
-	float angle = std::atan(deltaX / deltaZ); 
-	angle *= (180 / PI); // grados sexagecimal degrees
-	//angle -= 
-	// angle += (angle < 0) ? 360 : 0; //absolute value
-
-	
-	//cout << "Rotation: " << angle << endl;
-	
-	if (deltaZ > 0 && deltaX > 0) // 0 - 90
-		angle -= (angle > 90) ? 90 : 0;
-	else if (deltaZ > 0 && deltaX < 0)
-		angle -= (angle > 180) ? 90 : 0;
-	else if (deltaZ < 0 && deltaX < 0)
-		angle -= (angle > 270) ? 90 : 0;
-	else
-		angle = 270 - angle;*/
 	float angle = std::atan(MODULE(deltaZ) / MODULE(deltaX)); 
 	angle *= (180 / PI); // grados sexagecimal degrees
 	if(deltaZ == 0)
@@ -293,7 +269,7 @@ bool betweenTwoLines(Vector2 originPos, Vector2 finalPos, Vector2 point, float d
 }
 
 /**
- * @brief
+ * @brief gets the distance from 2 coordinates
  *
  * @param firstCoord
  * @param secondCoord

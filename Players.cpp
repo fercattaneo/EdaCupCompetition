@@ -35,40 +35,54 @@ void Players::start(int playerNumber)
 }
 
 /**
- * @brief
+ * @brief updates every player position according to what they should do, some may depend on its position and balls position
  *
- * @param gameData
+ * @param gameData pointer to the information the player may need to update its position
+ * @param attaking bool that declares if a robot should attack, bool obtained from gameModel (member 'posession')      
  */
-void Players::update(inGameData_t &gameData, bool attacking)
+void Players::update(inGameData_t& gameData, int attacking)
 {
-	switch (fieldRol)   //POR AHORA REPOSICIONES NOMAS
+	if (inField)
 	{
-	case GOALIE:
-		save(gameData);
-		break;
-	case DEFENSE:
-		defendGoal(gameData, -0.5);
-		break;
-	case DEFENSE2:
-		defendGoal(gameData, 0.5);
-		break;
-	case MIDFIELDER:
-		if(attacking)
-			midfielderReposition(gameData);
-		else
-			defensiveMidfielder(gameData);
-		break;
-	case SHOOTER:
-		if(attacking)
-			shooterReposition(gameData);
-		else
-			setSetpoint({ proportionalPosition({gameData.ballPosition.x, gameData.ballPosition.z},
-				{0,0}, 0.35), calculateRotation({0,0},{gameData.ballPosition.x, gameData.ballPosition.z})});
-		break;
-	case SHOOTER2:
-		secondShooterReposition(gameData);
-		break;
-	default: break;
+		switch (fieldRol)   //POR AHORA REPOSICIONES NOMAS
+		{
+		case GOALIE:
+			save(gameData);
+			break;
+		case DEFENSE:
+			defendGoal(gameData, attacking, -0.5);
+			break;
+		case DEFENSE2:
+			defendGoal(gameData, attacking, 0.5);
+			break;
+		case MIDFIELDER:
+			if (attacking == 0 || attacking == 2)
+				midfielderReposition(gameData);
+			else
+				defensiveMidfielder(gameData);
+			break;
+		case SHOOTER:
+			if (attacking == 0 || attacking == 2)
+				shooterReposition(gameData);
+			else
+				setSetpoint({ proportionalPosition({gameData.ballPosition.x, gameData.ballPosition.z},
+					{0,-1}, 0.35), calculateRotation({0,-1},{gameData.ballPosition.x, gameData.ballPosition.z}) });
+			break;
+		case SHOOTER2:
+			if (attacking == 0 || attacking == 2)
+				secondShooterReposition(gameData);
+			else
+				setSetpoint({ proportionalPosition({gameData.ballPosition.x, gameData.ballPosition.z},
+					{0,1}, 0.35), calculateRotation({0,1},{gameData.ballPosition.x, gameData.ballPosition.z}) });
+			break;
+		default: break;
+		}
+	}
+	else
+	{
+		int sign = (gameData.myGoal.x > 0 ? 1 : -1);
+		setSetpoint({{(sign * ((robotID * 0.4f) + 1)),-5.5f }, 180.0f});
+		cout << "Mande el robot afuera" << endl;
 	}
 }
 
@@ -98,7 +112,7 @@ setPoint_t Players::goToBall(Vector2 objectivePosition, Vector2 ballPosition, fl
  * position, it shoots.
  *
  * @param objectivePosition: opposites team goal ~ where to shoot
- * @param ballPosition: actual ball�s position ~ point of reference
+ * @param ballPosition: actual balls position ~ point of reference
  *
  * @return result: position in court and players rotation for shooting
  */
@@ -128,9 +142,9 @@ setPoint_t Players::kickBallLogic(Vector2 objectivePosition, Vector2 ballPositio
 
 
 /**
- * @brief calculates position of first shooter
+ * @brief calculates first shooter's position 
  *
- * @param data
+ * @param data pointer to the info the shooter may need
  */
 void Players::shooterReposition(inGameData_t& data)  //capaz esta plagada de errores de punteros...
 {
@@ -139,9 +153,9 @@ void Players::shooterReposition(inGameData_t& data)  //capaz esta plagada de err
 	{
 		for (int bot2 = bot1 + 1; bot2 < 6; bot2++)
 		{
-			if(data.oppTeamPositions[bot1].y != 100)
+			if (data.oppTeamPositions[bot1].y != 100)
 			{
-				Vector2 midPoint = proportionalPosition({ data.oppTeamPositions[bot1].x, 
+				Vector2 midPoint = proportionalPosition({ data.oppTeamPositions[bot1].x,
 					data.oppTeamPositions[bot1].z }, { data.oppTeamPositions[bot2].x,
 					data.oppTeamPositions[bot2].z }, 0.5);
 				midPoints.push_back(midPoint);
@@ -159,7 +173,7 @@ void Players::shooterReposition(inGameData_t& data)  //capaz esta plagada de err
 		Vector2 point = midPoints.back();
 		for (int bot = 0; bot < 6; bot++)  //mira distancias entre enemigo y pnto medio
 		{
-			if(data.oppTeamPositions[bot].y != 100)
+			if (data.oppTeamPositions[bot].y != 100)
 			{
 				float distance = distanceOfCoords(point, { data.oppTeamPositions[bot].x,
 					data.oppTeamPositions[bot].z });
@@ -184,86 +198,33 @@ void Players::shooterReposition(inGameData_t& data)  //capaz esta plagada de err
 	this->setSetpoint(idealSetPoint);
 }
 
+
+
 /**
- * @brief calculates position of second shooter
+ * @brief calculates second shooter's position
  *
- * @param data
+ * @param data pointer to the information the shooter may need
  */
 void Players::secondShooterReposition(inGameData_t& data)  //capaz esta plagada de errores de punteros...
 {
-	vector<Vector2> midPoints;
-	for (auto bot1 : data.oppTeamPositions)   //obtengo los puntos medios entre enemigos
-	{
-		if(bot1.y != 100)
-		{
-			for (auto bot2 : data.oppTeamPositions)
-			{
-				if(bot2.y != 100)
-				{
-					float distanceBetweenEnemies = distanceOfCoords({ bot1.x,bot1.z }, { bot2.x,bot2.z });
-					if (distanceBetweenEnemies > 0.2)
-					{
-						Vector2 midPoint = proportionalPosition({ bot1.x, bot1.z },
-							{ bot2.x, bot2.z }, 0.5);
-						if (MODULE((data.oppGoal.x - midPoint.x)) > 0.2)
-						{
-							midPoints.push_back(midPoint);
-						}
-					}
-				}
-			}
-			Vector2 firstCorner = { data.oppGoal.x, 3 }; //calculo con una esquina
-			Vector2 firstCornerMidPoint = proportionalPosition({ bot1.x, bot1.z }, firstCorner, 0.5);
-			midPoints.push_back(firstCornerMidPoint);
-			Vector2 secondCorner = { data.oppGoal.x, -3 }; //calculo con otra esquina
-			Vector2 secondCornerMidPoint = proportionalPosition({ bot1.x, bot1.z }, secondCorner, 0.5);
-			midPoints.push_back(secondCornerMidPoint);
-		}
-	}
-
-	float maxDist = 0;
-	Vector2 idealMidpoint = { 0,0 };
-	float minDistance = 9.0;
-
-	while (!midPoints.empty())  //mira todos los puntos medios entre robots
-	{
-		Vector2 point = midPoints.back();
-		for (auto bot : data.oppTeamPositions)  //mira distancias entre enemigo y pnto medio
-		{
-			if(bot.y != 100)
-			{
-				float distance = distanceOfCoords(point, { bot.x,bot.z });
-				if (distance < minDistance)   //selecciona al punto medio mas "comodo"
-					minDistance = distance;
-			}
-		}
-
-		float distance = distanceOfCoords(point, { data.oppGoal.x,3 });
-		if (distance < minDistance)   //selecciona al punto medio mas "comodo"
-			minDistance = distance;
-
-		distance = distanceOfCoords(point, { data.oppGoal.x,-3 });
-		if (distance < minDistance)   //selecciona al punto medio mas "comodo"
-			minDistance = distance;
-
-		if (minDistance > maxDist)
-		{
-			maxDist = minDistance;
-			idealMidpoint = point;
-		}
-		minDistance = 9.0;
-		midPoints.pop_back();
-	}
-	setPoint_t idealSetPoint;
-	idealSetPoint.coord = { idealMidpoint.x, idealMidpoint.y };
-	idealSetPoint.rotation = calculateRotation(idealSetPoint.coord, { data.ballPosition.x,data.ballPosition.z });
-	this->setSetpoint(idealSetPoint);
+	Vector2 ballPos = {data.ballPosition.x, data.ballPosition.z};
+	//0 -> 6 , 8 -> 8.2
+	float propX = ballPos.x * (1.7/8) + (data.oppGoal.x - (data.oppGoal.x/MODULE(data.oppGoal.x)) * 2.5);
+	float Zpoint = 0;
+	if(ballPos.y > 0.75)
+		Zpoint = 1.5;
+	else if (ballPos.y < -0.75)
+		Zpoint = -1.5;
+	else
+		Zpoint = 0;
+	this->setSetpoint({{propX, Zpoint}, calculateRotation({propX, Zpoint}, ballPos)});
 }
 
 /**
- * @brief Arquerea el arquero
+ * @brief updates goalie's position. 2 posibble ways of updating its position.
+ * Catching the ball from an enemy shot or repositioning near the goal area
  *
- * @param gameData
+ * @param gameData pointer to the information the goalie may need
  */
 void Players::save(inGameData_t& gameData)
 { //prop starts as the proportional between the goal and the ball position
@@ -279,10 +240,6 @@ void Players::save(inGameData_t& gameData)
 	{
 		destination = { (1.0f / 9.0f) * distanceOfCoords({gameData.ballPosition.x, gameData.ballPosition.z}, gameData.myGoal), possibleYAxis };
 		destination.x += gameData.myGoal.x;
-		// setSetpoint({ destination,(0)});
-		// float alpha = calculateRotation({position.x, position.z}, {gameData.ballPosition.x, 
-		// 														   gameData.ballPosition.z});
-		// setSetpoint({ destination,(alpha)});
 	}
 	else
 	{
@@ -293,13 +250,11 @@ void Players::save(inGameData_t& gameData)
 			gameData.ballPosition.z },
 			prop);
 
-		//TESTING
 		if (MODULE(gameData.myGoal.x - gameData.ballPosition.x) < 0.8 &&
 			MODULE(gameData.myGoal.x - gameData.ballPosition.x) < 1.5)
 		{
 			destination = { gameData.ballPosition.x, gameData.ballPosition.z };
 		}
-		//END TESTING
 	}
 
 	float alpha = calculateRotation({ position.x, position.z }, { gameData.ballPosition.x, gameData.ballPosition.z });
@@ -315,14 +270,19 @@ void Players::save(inGameData_t& gameData)
 * Builds an fictional line between the defensive point and the ball
 * and selects a position in the line to go to.
 */
-void Players::defendGoal(inGameData_t& data, float goalZpoint)
+void Players::defendGoal(inGameData_t& data, int attacking, float goalZpoint)
 {
 	setPoint_t destination;
-	float lengthProp = 0.6;
-
-	if (MODULE(data.myGoal.x - data.ballPosition.x) > 4.5)
-		lengthProp = 0.35;
-
+	float lengthProp = 0.7;
+	if(attacking == 0 || attacking == 2)
+	{
+		goalZpoint *= 2;
+		if(distanceOfCoords(data.myGoal, {data.ballPosition.x, data.ballPosition.z}) > 5)
+			lengthProp = 0.4;
+	}
+	else
+		lengthProp = 0.4;
+		
 	float angleProp = 2 - (MODULE(data.myGoal.x - data.ballPosition.x) / 6);
 	if (angleProp < 1.0)
 		angleProp = 1.0;
@@ -340,11 +300,6 @@ void Players::defendGoal(inGameData_t& data, float goalZpoint)
 	setSetpoint(destination);
 }
 
-
-/////////////
-// TESTING //
-/////////////
-
 Vector2 Players::openZPlace(float dist, inGameData_t& data, Vector2 point0, Vector2 point1, Vector2 vertix)
 {
 	Vector2 dest;
@@ -358,11 +313,11 @@ Vector2 Players::openZPlace(float dist, inGameData_t& data, Vector2 point0, Vect
 			if ((data.oppTeamPositions[j].x > data.myGoal.x &&
 				data.oppTeamPositions[j].x < data.ballPosition.x) ||
 				(data.oppTeamPositions[j].x < data.myGoal.x &&
-				data.oppTeamPositions[j].x > data.ballPosition.x) ||
+					data.oppTeamPositions[j].x > data.ballPosition.x) ||
 				(data.teamPositions[j].x > data.myGoal.x &&
-				data.teamPositions[j].x < data.ballPosition.x) ||
+					data.teamPositions[j].x < data.ballPosition.x) ||
 				(data.teamPositions[j].x < data.myGoal.x &&
-				data.teamPositions[j].x > data.ballPosition.x))  //is a robot between my goal and ball
+					data.teamPositions[j].x > data.ballPosition.x))  //is a robot between my goal and ball
 			{
 				if (i % 2 == 0) // analiza en z > 0
 					dest.y = ((int)(i / 2)) * zVaration;
@@ -380,6 +335,10 @@ Vector2 Players::openZPlace(float dist, inGameData_t& data, Vector2 point0, Vect
 	return { (point0.x),0 };
 }
 
+/////////////
+// TESTING //
+/////////////
+
 /**
  * @brief Calculates position of midfielder when attacking
  *
@@ -391,6 +350,7 @@ void Players::midfielderReposition(inGameData_t& data)
 	Vector2 dest = openZPlace(0.1, data, { 0,-2.7 }, { 0,2.7 }, { data.ballPosition.x, data.ballPosition.z });
 	float rotation = calculateRotation(dest, { data.ballPosition.x, data.ballPosition.z });
 	setSetpoint({ dest, rotation });
+	shoot();
 }
 
 /**
@@ -401,7 +361,7 @@ void Players::midfielderReposition(inGameData_t& data)
 void Players::defensiveMidfielder(inGameData_t& data)
 {
 	// hallar el que este mas "solo" de los 3 de mas arriba e interceptar el pase
-	int indexForOpenEnemy;
+	int indexForOpenEnemy = 3;
 	float maxDist = 0;
 	for (int i = 0; i < 6; i++) // recorro enemigos en nuestra mitad de cancha
 	{

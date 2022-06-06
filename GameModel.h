@@ -41,7 +41,7 @@ enum GameState
 
 enum BALL_POSESSION
 {
-    MY_TEAM,
+    MY_TEAM = 0,
     OPP_TEAM,
     FREE_BALL,
     DISPUTED_BALL
@@ -55,11 +55,10 @@ public:
 
     void onMessage(string topic, vector<char> payload);
 
-    void start(void);
+    void start();
     void suscribeToGameTopics();
     void setDisplay(string path, string robotID);
-    void addPlayer(Players *bot);
-    void removePlayer(Players *bot);
+    void addRobot(Players *bot);
 
 private:
     MQTTClient2 *mqttClient;
@@ -74,41 +73,41 @@ private:
     char msjteam;
 
     vector<Players *> team;
-    void updateGameConditions(inGameData_t& dataPassing);
+    void updateGameConditions(inGameData_t& dataPassing);   //update functions
     void update(inGameData_t &dataPassing);
     void updateFuturePos(inGameData_t& dataPassing);
     void updatePositions();
     void assignMessagePayload(string topic, vector<char> &payload);
 
+    string getTeamID();
+    void removePlayer();
+    void addPlayer();
+
+    void pausePositions();
     void setSetpoint(setPoint_t setpoint, int robotID);
 
-    void voltageKickerChipper(string robotID);
+    void voltageKickerChipper(string robotID);     //client messagge appending functions 
     void setDribbler(string robotID, bool onOff);
     void setChipper(string robotID);
     void setKicker(string robotID, float power);
 
-    void shoot(Players *player, Vector2 objectivePosition);
+    void shoot(Players *player, Vector2 objectivePosition);   //ball logic functions
     Vector2 getProxPosBall2D(Vector3 ballPosition, Vector3 ballVelocity);
     bool isBallStill(void);
-    void searchFreeBall();
+    int searchFreeBall();
+    bool checkPlayingBall();
     void analyzePosession();
-    void checkForCollision(Vector2 actualPos, setPoint_t &setpoint);
-    string getTeamID();
+    void kickonce(Players &player);
+    void dribbleTo(Players &player);
 
-    int analyzePass(Players &player);
+    int analyzePass(Players &player);  //field analyzing functions
     Vector2 analyzeShoot(Players &player);
     bool isInCourt(Vector3 param);
     void initialPositions();
     void freekickPositions();
     void penaltyPositions();
-    void kickonce(Players &player);
-    
-
-    /*TESTING*/
+    void checkForCollision(Vector2 actualPos, setPoint_t &setpoint);
     bool checkForInterception(vector<Vector3> &oppTeam, Vector2 objective, Vector2 teamPosition); 
-    void dribbleTo(Players &player);
-    bool checkPlayingBall();
-    void pausePositions();
 };
 
 #endif //_GAMEMODEL_H
