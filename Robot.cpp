@@ -15,67 +15,67 @@ Robot::~Robot()
 /* SETTERS */
 void Robot::setPosition(Vector3 pos)
 {
-    position = pos;
+	position = pos;
 }
 
 void Robot::setRotation(Vector3 newRot)
 {
-    rotation = newRot;
+	rotation = newRot;
 }
 
 void Robot::setSpeed(Vector3 newSpeed)
 {
-    speed = newSpeed;
+	speed = newSpeed;
 }
 
 void Robot::setAngularSpeed(Vector3 newAngSpeed)
 {
-    angularSpeed = newAngSpeed;
+	angularSpeed = newAngSpeed;
 }
 
 void Robot::setPowerLevels(Vector3 powerValues)
 {
-    powerLevel = powerValues;
+	powerLevel = powerValues;
 }
 void Robot::setSetpoint(setPoint_t setpoint)
 {
-    this->setpoint = setpoint;
+	this->setpoint = setpoint;
 }
 
 /* GETTERS */
 Vector3 Robot::getPosition()
 {
-    return position;
+	return position;
 }
 
 Vector3 Robot::getRotation()
 {
-    return rotation;
+	return rotation;
 }
 
 Vector3 Robot::getSpeed()
 {
-    return speed;
+	return speed;
 }
 
 Vector3 Robot::getAngularSpeed()
 {
-    return angularSpeed;
+	return angularSpeed;
 }
 
 float Robot::getKickerCharge()
 {
-    return powerLevel.z;
+	return powerLevel.z;
 }
 
 setPoint_t Robot::getSetPoint()
 {
-    return setpoint; 
+	return setpoint;
 }
 
 bool Robot::getInField()
 {
-    return inField;
+	return inField;
 }
 
 /**
@@ -83,7 +83,7 @@ bool Robot::getInField()
  */
 void Robot::enablePlayer()
 {
-    inField = true;
+	inField = true;
 }
 
 /**
@@ -91,5 +91,5 @@ void Robot::enablePlayer()
  */
 void Robot::dissablePlayer()
 {
-    inField = false;
+	inField = false;
 }

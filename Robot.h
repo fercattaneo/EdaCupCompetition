@@ -15,49 +15,49 @@ using namespace std;
 
 typedef struct // court coordenates
 {
-    float x;
-    float z;
+	float x;
+	float z;
 } coord_t;
 
 typedef struct // robot position and rotation
 {
-    Vector2 coord;
-    float rotation;
+	Vector2 coord;
+	float rotation;
 } setPoint_t;
 
 class Robot
 {
 public:
-    ~Robot();
+	~Robot();
 
-    string teamID;
-    int robotID;
+	string teamID;
+	int robotID;
 
-    Vector3 getPosition();
-    Vector3 getRotation();
-    Vector3 getSpeed();
-    Vector3 getAngularSpeed();
-    float getKickerCharge();
-    setPoint_t getSetPoint();
-    bool getInField();
+	Vector3 getPosition();
+	Vector3 getRotation();
+	Vector3 getSpeed();
+	Vector3 getAngularSpeed();
+	float getKickerCharge();
+	setPoint_t getSetPoint();
+	bool getInField();
 
-    void setPosition(Vector3 newPos);
-    void setRotation(Vector3 newRot);
-    void setSpeed(Vector3 newSpeed);
-    void setAngularSpeed(Vector3 newAngSpeed);
-    void setPowerLevels(Vector3 powerValues);
-    void setSetpoint(setPoint_t setpoint);
-    void enablePlayer();
-    void dissablePlayer();
+	void setPosition(Vector3 newPos);
+	void setRotation(Vector3 newRot);
+	void setSpeed(Vector3 newSpeed);
+	void setAngularSpeed(Vector3 newAngSpeed);
+	void setPowerLevels(Vector3 powerValues);
+	void setSetpoint(setPoint_t setpoint);
+	void enablePlayer();
+	void dissablePlayer();
 
 protected:
-    bool inField;
-    Vector3 position;
-    Vector3 rotation;
-    Vector3 speed;
-    Vector3 angularSpeed;
-    Vector3 powerLevel; // x for consume, y for battery level, z for kicker charge
-    setPoint_t setpoint;
+	bool inField;
+	Vector3 position;
+	Vector3 rotation;
+	Vector3 speed;
+	Vector3 angularSpeed;
+	Vector3 powerLevel; // x for consume, y for battery level, z for kicker charge
+	setPoint_t setpoint;
 };
 
 #endif //ROBOT_H

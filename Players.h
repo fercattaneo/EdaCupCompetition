@@ -25,62 +25,62 @@ using namespace std;
 
 typedef struct
 {
-    int availableRobots;
-    Vector2 myGoal;                     
-    Vector2 oppGoal;               
-    Vector3 ballPosition;
-    Vector3 ballVelocity;
-    vector<Vector3> teamPositions;
-    vector<Vector3> teamFuturePositions;
-    vector<Vector3> oppTeamPositions;
-    vector<Vector3> oppTeamSpeed;
-    vector<Vector3> oppTeamFuturePos;
+	int availableRobots;
+	Vector2 myGoal;
+	Vector2 oppGoal;
+	Vector3 ballPosition;
+	Vector3 ballVelocity;
+	vector<Vector3> teamPositions;
+	vector<Vector3> teamFuturePositions;
+	vector<Vector3> oppTeamPositions;
+	vector<Vector3> oppTeamSpeed;
+	vector<Vector3> oppTeamFuturePos;
 } inGameData_t;
 
 // Role of each player
 enum PLAYERS_POSITION // for court role identification
 {
-    GOALIE,
-    DEFENSE,
-    DEFENSE2,
-    MIDFIELDER,
-    SHOOTER,
-    SHOOTER2
+	GOALIE,
+	DEFENSE,
+	DEFENSE2,
+	MIDFIELDER,
+	SHOOTER,
+	SHOOTER2
 };
 
 class Players : public Robot
 {
 public:
-    Players();
-    ~Players();
+	Players();
+	~Players();
 
-    void update(inGameData_t &gameData, int attacking);
-    void start(int playerNumber);
-    setPoint_t goToBall(Vector2 objectivePosition, Vector2 ballPosition, float proportional);
-    setPoint_t kickBallLogic(Vector2 objectivePosition, Vector2 ballPosition);
-    Vector2 openZPlace (float dist, inGameData_t &data, Vector2 point0, Vector2 point1, Vector2 vertix);
-    
-    int fieldRol;
+	void update(inGameData_t& gameData, int attacking);
+	void start(int playerNumber);
+	setPoint_t goToBall(Vector2 objectivePosition, Vector2 ballPosition, float proportional);
+	setPoint_t kickBallLogic(Vector2 objectivePosition, Vector2 ballPosition);
+	Vector2 openZPlace(float dist, inGameData_t& data, Vector2 point0, Vector2 point1, Vector2 vertix);
+
+	int fieldRol;
 
 
 private:
 
-    
-    // GOALIE
-    void save(inGameData_t &gameData);
 
-    // DEFENSE
-    void defendGoal(inGameData_t &data, int attacking, float goalZpoint);
-    
-    // MIDFIELDER
-    void midfielderReposition(inGameData_t& data);
-    void defensiveMidfielder (inGameData_t &data);
+	// GOALIE
+	void save(inGameData_t& gameData);
 
-    // SHOOTERS
-    void shooterReposition(inGameData_t &data);
-    void secondShooterReposition (inGameData_t &data);
+	// DEFENSE
+	void defendGoal(inGameData_t& data, int attacking, float goalZpoint);
 
-    
+	// MIDFIELDER
+	void midfielderReposition(inGameData_t& data);
+	void defensiveMidfielder(inGameData_t& data);
+
+	// SHOOTERS
+	void shooterReposition(inGameData_t& data);
+	void secondShooterReposition(inGameData_t& data);
+
+
 };
 
 #endif // PLAYERS_H

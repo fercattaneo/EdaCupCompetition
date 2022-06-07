@@ -9,18 +9,23 @@
 #include "GameModel.h"
 #include "data.h"
 
-
-
-/**
- * @brief analyzes the topic and delivers the payload to the desired place ¿?
- *
- * @param topic: string declaration of messagge's topic
- * @param payload: data of the topic
- */
+ /**
+  * @brief analyzes the topic and delivers the payload to the desired place ¿?
+  *
+  * @param topic: string declaration of messagge's topic
+  * @param payload: data of the topic
+  */
 void GameModel::assignMessagePayload(string topic, vector<char>& payload)
 {
 	if (topic.compare(0, 6, "edacup") == 0) // game state messagge
 	{
+		if(payload.size() >= 1)
+		{
+			if ((int)payload[0] == 1 || (int)payload[0] == 2)
+			{
+				msjteam = (int)payload[0];
+			}			
+		}
 		if (topic.compare(7, 10, "preKickOff") == 0)
 		{
 			gameState = PRE_KICKOFF;
@@ -55,20 +60,15 @@ void GameModel::assignMessagePayload(string topic, vector<char>& payload)
 		}
 		else if (topic.compare(7, 11, "removeRobot") == 0)
 		{
-			removePlayer();
+			removePlayer();		
 		}
 		else if (topic.compare(7, 8, "addRobot") == 0)
 		{
-			addPlayer();
+			addPlayer();		
 		}
 		else
 		{
 			cout << "FAILURE: INVALID GAMESTATE MESSAGE RECIVED" << endl;
-		}
-
-		if (topic.compare(7, 5, "pause") != 0 && topic.compare(7, 8, "continue") != 0)
-		{
-			msjteam = payload[0];
 		}
 	}
 	else if (topic.compare(5, 1, teamID) == 0) // the robot belongs to the team
@@ -80,13 +80,13 @@ void GameModel::assignMessagePayload(string topic, vector<char>& payload)
 			float payloadToFloat[12];
 			memcpy(payloadToFloat, &payload[0], payload.size());
 
-			team[robotIndex - 1]->setPosition({ payloadToFloat[0], payloadToFloat[1], 
+			team[robotIndex - 1]->setPosition({ payloadToFloat[0], payloadToFloat[1],
 												payloadToFloat[2] });
-			team[robotIndex - 1]->setSpeed({ payloadToFloat[3], payloadToFloat[4], 
+			team[robotIndex - 1]->setSpeed({ payloadToFloat[3], payloadToFloat[4],
 												payloadToFloat[5] });
-			team[robotIndex - 1]->setRotation({ payloadToFloat[6], payloadToFloat[7], 
+			team[robotIndex - 1]->setRotation({ payloadToFloat[6], payloadToFloat[7],
 												payloadToFloat[8] });
-			team[robotIndex - 1]->setAngularSpeed({ payloadToFloat[9], payloadToFloat[10], 
+			team[robotIndex - 1]->setAngularSpeed({ payloadToFloat[9], payloadToFloat[10],
 												payloadToFloat[11] });
 
 			dataPassing.teamPositions[robotIndex - 1].x = payloadToFloat[0];
@@ -100,7 +100,7 @@ void GameModel::assignMessagePayload(string topic, vector<char>& payload)
 			float payloadToFloat[3];
 			memcpy(payloadToFloat, &payload[0], std::min(payload.size(), sizeof(payloadToFloat)));
 
-			team[robotIndex - 1]->setPowerLevels({ payloadToFloat[0], payloadToFloat[1], 	
+			team[robotIndex - 1]->setPowerLevels({ payloadToFloat[0], payloadToFloat[1],
 												payloadToFloat[2] });
 		}
 	}
@@ -143,16 +143,16 @@ void GameModel::updateGameConditions(inGameData_t& dataPassing)
 	case PRE_KICKOFF:
 		initialPositions();
 		break;
-	case KICKOFF: 
+	case KICKOFF:
 		kickonce(*team[dataPassing.availableRobots - 1]);
-	case FREEKICK: 
+	case FREEKICK:
 		if (checkPlayingBall())
 		{
 			gameState = CONTINUE;
 		}
 		break;
 	case PRE_FREEKICK:
-		freekickPositions(); 
+		freekickPositions();
 		break;
 	case PRE_PENALTY:
 		penaltyPositions();
@@ -194,7 +194,7 @@ void GameModel::update(inGameData_t& dataPassing)
 		analyzePosession();
 		if (posession == FREE_BALL)
 		{
-			int baller = searchFreeBall(); //TESTING
+			int baller = searchFreeBall();
 			for (auto player : team)
 			{
 				if (player->robotID != baller)
@@ -225,12 +225,12 @@ void GameModel::update(inGameData_t& dataPassing)
 					}
 					else
 					{
-						shoot(team[robotWithBall],dataPassing.oppGoal, 0);
+						shoot(team[robotWithBall], dataPassing.oppGoal, 0);
 					}
 				}
 				for (auto player : team)
 				{
-					if(player->robotID != nonUpdatingPlayer)
+					if (player->robotID != nonUpdatingPlayer)
 						player->update(dataPassing, posession);
 				}
 			}
@@ -247,7 +247,7 @@ void GameModel::update(inGameData_t& dataPassing)
 }
 
 /**
- * @brief gets the positions the bots may be 
+ * @brief gets the positions the bots may be
  *
  * @param datapassing pointer to the information to update
  */
@@ -293,10 +293,12 @@ void GameModel::updatePositions()
  */
 void GameModel::addPlayer()
 {
+	cout << "msjteam: " << msjteam << endl;
 	if (msjteam == (teamID[0] - '0'))
 	{
 		if (dataPassing.availableRobots < 6)
 		{
+			cout << "2do if, A" << endl;
 			team[dataPassing.availableRobots]->enablePlayer();
 			dataPassing.availableRobots++;
 		}
@@ -310,6 +312,7 @@ void GameModel::addPlayer()
  */
 void GameModel::removePlayer()
 {
+	cout << "msjteam: " << msjteam << endl;
 	if (msjteam == (teamID[0] - '0'))
 	{
 		if (dataPassing.availableRobots > 0)

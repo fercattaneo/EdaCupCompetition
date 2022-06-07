@@ -158,7 +158,7 @@ void GameModel::shoot(Players* player, Vector2 objectivePosition, bool kickChip)
 				power = distance / 5;
 				power = (power <= 0.3) ? 0.3 : power;
 			}				// pass 
-			if(kickChip)
+			if (kickChip)
 				setKicker(to_string(player->robotID + 1), power);
 			else
 				setChipper(to_string(player->robotID + 1), power);
@@ -184,8 +184,8 @@ void GameModel::shoot(Players* player, Vector2 objectivePosition, bool kickChip)
  * @return true if pass is possible
  * @return false if not
  */
-bool GameModel::checkForInterception(vector<Vector3>& oppPositions, 
-									Vector2 objective, Vector2 Position)
+bool GameModel::checkForInterception(vector<Vector3>& oppPositions,
+	Vector2 objective, Vector2 Position)
 {
 	for (int bot = 0; bot < 6; bot++)
 	{
@@ -248,7 +248,7 @@ void GameModel::checkForCollision(Vector2 actualPos, setPoint_t& setpoint, int r
 			setpoint.coord = { dataPassing.oppTeamFuturePos[bot].x - (signX * 0.2f),
 				dataPassing.oppTeamFuturePos[bot].z - (signZ * 0.2f) };
 			setSetpoint({ { dataPassing.oppTeamFuturePos[bot].x + (signX * 0.2f),
-				dataPassing.oppTeamFuturePos[bot].z + (signZ * 0.2f)}, 0 }, bot); 
+				dataPassing.oppTeamFuturePos[bot].z + (signZ * 0.2f)}, 0 }, bot);
 			break;
 		}
 	}
@@ -262,7 +262,7 @@ void GameModel::checkForCollision(Vector2 actualPos, setPoint_t& setpoint, int r
 int GameModel::searchFreeBall()
 {
 	setPoint_t destination;
-	if (dataPassing.ballPosition.y > 0.1) 
+	if (dataPassing.ballPosition.y > 0.1)
 		destination.coord = getProxPosBall2D(dataPassing.ballPosition, dataPassing.ballVelocity);
 	else
 	{
@@ -278,7 +278,7 @@ int GameModel::searchFreeBall()
 	for (auto ally : team)
 	{
 		Vector3 pos = ally->getPosition();
-		float closeness = distanceOfCoords({ pos.x, pos.z }, 
+		float closeness = distanceOfCoords({ pos.x, pos.z },
 			{ destination.coord.x, destination.coord.y });
 		if (closeness < maxCloseness)
 		{
@@ -305,10 +305,10 @@ void GameModel::analyzePosession()
 	{
 		bool nearness = isCloseTo({ enemy.x, enemy.z },
 			{ dataPassing.ballPosition.x, dataPassing.ballPosition.z }, 0.12);
-		if (nearness) 
+		if (nearness)
 		{
 			posession = OPP_TEAM;
-			
+
 			// if (MODULE(dataPassing.ballVelocity.x) < 0.05 && 
 			// MODULE(dataPassing.ballVelocity.z) < 0.05)
 			// {
@@ -367,7 +367,7 @@ void GameModel::initialPositions()
 		setSetpoint({ {(dataPassing.myGoal.x - (sign * 1.8f)),1}, rot }, 2); //def 2
 		setSetpoint({ {(dataPassing.myGoal.x - (sign * 2.5f)), 0}, rot }, 3); //midf
 		setSetpoint({ {(dataPassing.myGoal.x - (sign * 3.5f)), -1}, rot }, 4); //att 1
-		setSetpoint({ {(0 - (sign * 0.1f)), 0}, calculateRotation({0,0},
+		setSetpoint({ {(0 - (sign * 0.25f)), 0}, calculateRotation({0,0},
 			dataPassing.myGoal) }, 5);  //att 2	
 	}
 	else
@@ -466,13 +466,13 @@ int GameModel::analyzePass(Players& player)
 	for (int i = 5; i > 0; i--)
 	{
 		flag = true;
-		if(i != player.robotID)
+		if (i != player.robotID)
 		{
 			Vector3 ally = dataPassing.teamPositions[i];
 			for (auto enemyBot : dataPassing.oppTeamPositions)
 			{
-				if((enemyBot.y != 100))
-				{			
+				if ((enemyBot.y != 100))
+				{
 					if ((betweenTwoLines({ pos.x,pos.y }, { ally.x,ally.y },
 						{ enemyBot.x, enemyBot.z }, 0.1f)))
 					{
@@ -483,7 +483,7 @@ int GameModel::analyzePass(Players& player)
 				}
 			}
 		}
-		if(!flag)
+		if (!flag)
 			break;
 	}
 
@@ -491,7 +491,7 @@ int GameModel::analyzePass(Players& player)
 }
 
 /**
- * @brief 
+ * @brief
  *
  *
  */
@@ -552,9 +552,21 @@ bool GameModel::checkPlayingBall()
  */
 void GameModel::kickonce(Players& player)
 {
+	setDribbler(to_string(player.robotID + 1), false);
 	if (msjteam == (teamID[0] - '0'))
 	{
-		setKicker(to_string(player.robotID + 1), 0.7);
+		setDribbler(to_string(player.robotID + 1), false);
+		shoot(&player, {team[3]->getPosition().x, team[3]->getPosition().z}, true);
+		// Vector3 pos = player.getPosition();
+		// if(distanceOfCoords({pos.x, pos.z}, {0,0}) <= 0.1)
+		// 	setDribbler((to_string(player.robotID + 1)), true);
+		// 	int value = analyzePass(player);
+		// 	if (value != 7) {
+		// 		setDribbler(to_string(player.robotID + 1), false);
+		// 		shoot(&player, {team[value]->getPosition().x, team[value]->getPosition().z}, true);
+		// 	}
+		// else
+		// 	setSetpoint({{0,0}, calculateRotation({0,0}, dataPassing.myGoal)}, player.robotID);
 	}
 }
 
@@ -579,5 +591,8 @@ void GameModel::pausePositions()
 				{ dataPassing.ballPosition.x, dataPassing.ballPosition.z });
 			setSetpoint({ {bot.x - (sign * (1.0f - dist)), bot.z}, rot }, player->robotID);
 		}
+
+		if (!player->getInField())
+			setSetpoint({{0,0}, 0}, player->robotID);
 	}
 }

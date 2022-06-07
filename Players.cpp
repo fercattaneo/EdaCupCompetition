@@ -39,34 +39,34 @@ void Players::start(int playerNumber)
  * @brief updates every player position according to what they should do, some may depend on its position and balls position
  *
  * @param gameData pointer to the information the player may need to update its position
- * @param attaking bool that declares if a robot should attack, bool obtained from gameModel (member 'posession')      
+ * @param attaking bool that declares if a robot should attack, bool obtained from gameModel (member 'posession')
  */
 void Players::update(inGameData_t& gameData, int attacking)
 {
 	switch (fieldRol)
 	{
-		case GOALIE:
-			save(gameData);
-			break;
-		case DEFENSE:
-			defendGoal(gameData, attacking, -0.5);
-			break;
-		case DEFENSE2:
-			defendGoal(gameData, attacking, 0.5);
-			break;
-		case MIDFIELDER:
-			if (attacking == 0 || attacking == 2)
-				midfielderReposition(gameData);
-			else
-				defensiveMidfielder(gameData);
-			break;
-		case SHOOTER:
-				shooterReposition(gameData);
-			break;
-		case SHOOTER2:
-				secondShooterReposition(gameData);
-			break;
-		default: break;
+	case GOALIE:
+		save(gameData);
+		break;
+	case DEFENSE:
+		defendGoal(gameData, attacking, 0.5);
+		break;
+	case DEFENSE2:
+		defendGoal(gameData, attacking, -0.5);
+		break;
+	case MIDFIELDER:
+		if (attacking == 0 || attacking == 2)
+			midfielderReposition(gameData);
+		else
+			defensiveMidfielder(gameData);
+		break;
+	case SHOOTER:
+		shooterReposition(gameData);
+		break;
+	case SHOOTER2:
+		secondShooterReposition(gameData);
+		break;
+	default: break;
 	}
 }
 
@@ -126,7 +126,7 @@ setPoint_t Players::kickBallLogic(Vector2 objectivePosition, Vector2 ballPositio
 
 
 /**
- * @brief calculates first shooter's position 
+ * @brief calculates first shooter's position
  *
  * @param data pointer to the info the shooter may need
  */
@@ -191,19 +191,19 @@ void Players::shooterReposition(inGameData_t& data)
  */
 void Players::secondShooterReposition(inGameData_t& data)
 {
-	Vector2 ballPos = {data.ballPosition.x, data.ballPosition.z};
+	Vector2 ballPos = { data.ballPosition.x, data.ballPosition.z };
 	//0 -> 6 , 8 -> 8.2
-	float propX = (MODULE(ballPos.x - data.myGoal.x)) * (1.7/8) +
-		(data.oppGoal.x - (data.oppGoal.x/MODULE(data.oppGoal.x)) * 2.5);
+	float propX = (MODULE(ballPos.x - data.myGoal.x)) * (1.7 / 8) +
+		(data.oppGoal.x - (data.oppGoal.x / MODULE(data.oppGoal.x)) * 2.5);
 	float Zpoint = 0;
-	if(ballPos.y > 0.75)
+	if (ballPos.y > 0.75)
 		Zpoint = 1.5;
 	else if (ballPos.y < -0.75)
 		Zpoint = -1.5;
 	else
 		Zpoint = 0;
 
-	this->setSetpoint({{propX, Zpoint}, calculateRotation({propX, Zpoint}, ballPos)});
+	this->setSetpoint({ {propX, Zpoint}, calculateRotation({propX, Zpoint}, ballPos) });
 }
 
 /**
@@ -221,9 +221,9 @@ void Players::save(inGameData_t& gameData)
 	float possibleYAxis = 0.0f;
 	if (ballVel.x != 0)
 		possibleYAxis = (ballVel.y / ballVel.x) * (gameData.myGoal.x - gameData.ballPosition.x)
-			+ gameData.ballPosition.z;
+		+ gameData.ballPosition.z;
 
-	if (ballVel.x / gameData.myGoal.x > 0.0 && MODULE(possibleYAxis) < 0.5f) 
+	if (ballVel.x / gameData.myGoal.x > 0.0 && MODULE(possibleYAxis) < 0.5f)
 	{ //if the ball is in a possible direction that could go to the goal
 		destination = { (1.0f / 9.0f) * distanceOfCoords({gameData.ballPosition.x,
 			gameData.ballPosition.z}, gameData.myGoal), possibleYAxis };
@@ -234,7 +234,7 @@ void Players::save(inGameData_t& gameData)
 		float prop = (distanceOfCoords(gameData.myGoal, { gameData.ballPosition.x,
 			gameData.ballPosition.z }) < 2) ? 0.5 : 0.2;
 
-		destination = proportionalPosition(gameData.myGoal,{ gameData.ballPosition.x,
+		destination = proportionalPosition(gameData.myGoal, { gameData.ballPosition.x,
 			gameData.ballPosition.z }, prop);
 
 		if (MODULE(gameData.myGoal.x - gameData.ballPosition.x) < 0.8 &&
@@ -244,7 +244,7 @@ void Players::save(inGameData_t& gameData)
 		}
 	}
 
-	float alpha = calculateRotation({ position.x, position.z }, 
+	float alpha = calculateRotation({ position.x, position.z },
 		{ gameData.ballPosition.x, gameData.ballPosition.z });
 	setSetpoint({ destination, alpha });
 
@@ -262,15 +262,15 @@ void Players::defendGoal(inGameData_t& data, int attacking, float goalZpoint)
 {
 	setPoint_t destination;
 	float lengthProp = 0.7;
-	if(attacking == 0 || attacking == 2)
+	if (attacking == 0 || attacking == 2)
 	{
 		goalZpoint *= 2;
-		if(distanceOfCoords(data.myGoal, {data.ballPosition.x, data.ballPosition.z}) > 5)
+		if (distanceOfCoords(data.myGoal, { data.ballPosition.x, data.ballPosition.z }) > 5)
 			lengthProp = 0.4;
 	}
 	else
 		lengthProp = 0.4;
-		
+
 	float angleProp = 2 - (MODULE(data.myGoal.x - data.ballPosition.x) / 6);
 	if (angleProp < 1.0)
 		angleProp = 1.0;
@@ -279,19 +279,20 @@ void Players::defendGoal(inGameData_t& data, int attacking, float goalZpoint)
 
 	destination.coord = proportionalPosition({ data.myGoal.x, (data.myGoal.y - goalZpoint) },
 		{ data.ballPosition.x, data.ballPosition.z }, lengthProp);
-	if (distanceOfCoords({ data.myGoal.x, data.myGoal.y }, 
-		{ data.ballPosition.x, data.ballPosition.z }) < 2.3)
+	if(distanceOfCoords(data.myGoal, destination.coord) > 4.5)
+		destination.coord.x = (data.myGoal.x/MODULE(data.myGoal.x)) * 1.0f;
+	if (distanceOfCoords(data.myGoal, { data.ballPosition.x, data.ballPosition.z }) < 2.3)
 	{
 		destination.coord = proportionalPosition({ data.myGoal.x, goalZpoint },
 			{ data.ballPosition.x, data.ballPosition.z }, 1);
 	}
-	destination.rotation = calculateRotation({ position.x, position.z }, 
+	destination.rotation = calculateRotation({ position.x, position.z },
 		{ data.ballPosition.x, data.ballPosition.z });
 	setSetpoint(destination);
 }
 
-Vector2 Players::openZPlace(float dist, inGameData_t& data, Vector2 point0, 
-							Vector2 point1, Vector2 vertix)
+Vector2 Players::openZPlace(float dist, inGameData_t& data, Vector2 point0,
+	Vector2 point1, Vector2 vertix)
 {
 	Vector2 dest;
 	dest.x = (1.5 / MODULE(data.oppGoal.x)) * data.ballPosition.x;
@@ -312,7 +313,7 @@ Vector2 Players::openZPlace(float dist, inGameData_t& data, Vector2 point0,
 			{
 				if (i % 2 == 0)
 					dest.y = ((int)(i / 2)) * zVaration;
-				else 
+				else
 					dest.y = ((int)(-i / 2)) * zVaration;
 
 				if (!betweenTwoLines({ data.ballPosition.x, data.ballPosition.z }, dest,
@@ -333,7 +334,7 @@ Vector2 Players::openZPlace(float dist, inGameData_t& data, Vector2 point0,
  */
 void Players::midfielderReposition(inGameData_t& data)
 {
-	Vector2 dest = openZPlace(0.1, data, { 0,-2.7 }, { 0,2.7 }, 
+	Vector2 dest = openZPlace(0.1, data, { 0,-2.7 }, { 0,2.7 },
 		{ data.ballPosition.x, data.ballPosition.z });
 	float rotation = calculateRotation(dest, { data.ballPosition.x, data.ballPosition.z });
 	setSetpoint({ dest, rotation });
@@ -357,7 +358,7 @@ void Players::defensiveMidfielder(inGameData_t& data)
 			{
 				if (j != 3 && MODULE(data.teamPositions[j].x - data.oppTeamPositions[i].x) < 4)
 				{
-					float dist = distanceOfCoords({data.teamPositions[j].x, data.teamPositions[j].z}
+					float dist = distanceOfCoords({ data.teamPositions[j].x, data.teamPositions[j].z }
 					, { data.oppTeamPositions[i].x, data.oppTeamPositions[i].z });
 					if (dist < minDist)
 					{

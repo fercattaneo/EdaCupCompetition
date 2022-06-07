@@ -16,13 +16,12 @@
 
 using namespace std;
 
-void subscribeRobotTopics(MQTTClient2 &client, string team);
+void subscribeRobotTopics(MQTTClient2& client, string team);
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
-	// string IMAGES_PATH = "C:/Users/catta/Documents/EDA/EdaCup/Resources/";
-	 string IMAGES_PATH = "C:/Users/santi/Source/Repos/fercattaneo/EdaCupCompetition/Resources/";
-	//string IMAGES_PATH = "../Resources/";
+
+	string IMAGES_PATH = "C:/Users/santi/Source/Repos/fercattaneo/EdaCupCompetition/Resources/";
 
 	MQTTClient2 client;
 	if (!client.connect("controller", "localhost", 1883, "user", "vdivEMMN3SQWX2Ez"))
@@ -30,15 +29,14 @@ int main(int argc, char *argv[])
 		cout << "Could not connect." << endl;
 		return 1;
 	}
-	/*string myTeam(1, ' ');
+	string myTeam(1, ' ');
 	if (argc == 2)
-		myTeam = argv[1];  //Se lee por linea de comando qué equipo somos
+		myTeam = argv[1];
 	else
 	{
 		cout << "input Inválido" << endl;
 		return 1;
-	}*/
-	string myTeam = "1";
+	}
 
 	GameModel gameModel(client, myTeam);
 
@@ -83,7 +81,7 @@ int main(int argc, char *argv[])
  * @param client: current client for suscription
  * @param team: string containig the actual team identification
  */
-void subscribeRobotTopics(MQTTClient2 &client, string team)
+void subscribeRobotTopics(MQTTClient2& client, string team)
 {
 	string myTeam, oppositeTeam;
 	if (team == "1")
