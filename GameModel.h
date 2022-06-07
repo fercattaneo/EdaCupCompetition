@@ -15,7 +15,6 @@
 #include "MQTTClient2.h"
 #include "Players.h"
 #include "data.h"
-#include "proximityMap.h"
 
 using namespace std;
 
@@ -34,9 +33,7 @@ enum GameState
     PAUSE, //no se juega y hay que bajar la vel a 1,5 m/s y 0,5 mts de la pelota 
     CONTINUE, //nuestro modo de jugar
     REMOVE_ROBOT,
-    ADD_ROBOT,
-    ENDED_GAME,
-    GOAL
+    ADD_ROBOT
 };
 
 enum BALL_POSESSION
@@ -88,17 +85,16 @@ private:
 
     void voltageKickerChipper(string robotID);     //client messagge appending functions 
     void setDribbler(string robotID, bool onOff);
-    void setChipper(string robotID);
+    void setChipper(string robotID, float power);
     void setKicker(string robotID, float power);
 
-    void shoot(Players *player, Vector2 objectivePosition);   //ball logic functions
+    void shoot(Players* player, Vector2 objectivePosition, bool kickChip);   //ball logic functions
     Vector2 getProxPosBall2D(Vector3 ballPosition, Vector3 ballVelocity);
     bool isBallStill(void);
     int searchFreeBall();
     bool checkPlayingBall();
     void analyzePosession();
     void kickonce(Players &player);
-    void dribbleTo(Players &player);
 
     int analyzePass(Players &player);  //field analyzing functions
     Vector2 analyzeShoot(Players &player);
@@ -106,7 +102,7 @@ private:
     void initialPositions();
     void freekickPositions();
     void penaltyPositions();
-    void checkForCollision(Vector2 actualPos, setPoint_t &setpoint);
+    void checkForCollision(Vector2 actualPos, setPoint_t &setpoint, int robotID);
     bool checkForInterception(vector<Vector3> &oppTeam, Vector2 objective, Vector2 teamPosition); 
 };
 

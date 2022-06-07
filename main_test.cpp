@@ -30,8 +30,14 @@ int main(int argc, char *argv[])
 		cout << "Could not connect." << endl;
 		return 1;
 	}
-
-	//string myTeam = argv[1];  //Se lee por linea de comando qué equipo somos
+	/*string myTeam(1, ' ');
+	if (argc == 2)
+		myTeam = argv[1];  //Se lee por linea de comando qué equipo somos
+	else
+	{
+		cout << "input Inválido" << endl;
+		return 1;
+	}*/
 	string myTeam = "1";
 
 	GameModel gameModel(client, myTeam);

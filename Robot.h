@@ -39,6 +39,7 @@ public:
     Vector3 getAngularSpeed();
     float getKickerCharge();
     setPoint_t getSetPoint();
+    bool getInField();
 
     void setPosition(Vector3 newPos);
     void setRotation(Vector3 newRot);

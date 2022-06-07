@@ -73,10 +73,15 @@ setPoint_t Robot::getSetPoint()
     return setpoint; 
 }
 
+bool Robot::getInField()
+{
+    return inField;
+}
+
 /**
  * @brief: enables robot for playing
  */
-void Robot::enablePlayer(void)
+void Robot::enablePlayer()
 {
     inField = true;
 }
@@ -84,7 +89,7 @@ void Robot::enablePlayer(void)
 /**
  * @brief: dissables robot for playing
  */
-void Robot::dissablePlayer(void)
+void Robot::dissablePlayer()
 {
     inField = false;
 }
